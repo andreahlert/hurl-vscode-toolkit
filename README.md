@@ -21,7 +21,7 @@
 Full TextMate grammar for `.hurl` files with support for HTTP methods, URLs, headers, status codes, sections, variables, embedded JSON/XML/GraphQL, assert predicates, filter functions, and more.
 
 <p align="center">
-  <img src="assets/demo-syntax.png" alt="Syntax Highlighting" width="800">
+  <img src="assets/demo-syntax.gif" alt="Syntax Highlighting" width="800">
 </p>
 
 ### Run Requests (CodeLens)
@@ -62,7 +62,7 @@ Real-time error detection for:
 - Unclosed variable references `{{`
 
 <p align="center">
-  <img src="assets/demo-diagnostics.png" alt="Diagnostics" width="800">
+  <img src="assets/demo-diagnostics.gif" alt="Diagnostics" width="800">
 </p>
 
 ### Snippets
