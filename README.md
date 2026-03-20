@@ -1,14 +1,18 @@
-# Hurl Toolkit
+<p align="center">
+  <img src="assets/banner.png" alt="Hurl Toolkit Banner" width="1200">
+</p>
 
-![Hurl Toolkit Banner](assets/banner.png)
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit"><img src="https://img.shields.io/visual-studio-marketplace/v/atoolz.hurl-vscode-toolkit?label=VS%20Code%20Marketplace&color=22c55e" alt="Visual Studio Marketplace"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit"><img src="https://img.shields.io/visual-studio-marketplace/i/atoolz.hurl-vscode-toolkit?color=22c55e" alt="Installs"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit"><img src="https://img.shields.io/visual-studio-marketplace/r/atoolz.hurl-vscode-toolkit?color=22c55e" alt="Rating"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-22c55e.svg" alt="License: MIT"></a>
+  <a href="https://hurl.dev"><img src="https://img.shields.io/badge/Hurl-hurl.dev-22c55e" alt="Hurl"></a>
+</p>
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/atoolz.hurl-vscode-toolkit?label=VS%20Code%20Marketplace&color=22c55e)](https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/atoolz.hurl-vscode-toolkit?color=22c55e)](https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/atoolz.hurl-vscode-toolkit?color=22c55e)](https://marketplace.visualstudio.com/items?itemName=atoolz.hurl-vscode-toolkit)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](https://opensource.org/licenses/MIT)
-[![Hurl](https://img.shields.io/badge/Hurl-hurl.dev-22c55e)](https://hurl.dev)
-
-Complete [Hurl](https://hurl.dev) HTTP testing toolkit for VS Code. Syntax highlighting, run requests, response viewer, and IntelliSense for `.hurl` files.
+<p align="center">
+  Complete <a href="https://hurl.dev">Hurl</a> HTTP testing toolkit for VS Code. Syntax highlighting, run requests, response viewer, and IntelliSense for <code>.hurl</code> files.
+</p>
 
 ## Features
 
@@ -86,6 +90,21 @@ Real-time error detection for:
 
 [Hurl](https://hurl.dev) is a command-line tool that runs HTTP requests defined in a simple plain text format. It can perform requests, capture values, and evaluate queries on headers and body response. Hurl is very versatile: it can be used for fetching data, testing HTTP sessions, and testing APIs.
 
+## Contributing
+
+```bash
+git clone https://github.com/atoolz/hurl-vscode-toolkit.git
+cd hurl-vscode-toolkit
+npm install
+npm run build
+npm run test:e2e
+# Press F5 in VS Code to debug
+```
+
+Contributions welcome! See the [AToolZ Contributing Guide](https://github.com/atoolz/.github/blob/main/CONTRIBUTING.md).
+
 ## License
 
-MIT
+[MIT](LICENSE)
+
+<p align="center"><sub>Part of the <a href="https://github.com/atoolz">AToolZ</a> toolkit suite</sub></p>

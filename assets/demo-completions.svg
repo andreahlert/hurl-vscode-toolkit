@@ -6,31 +6,31 @@
         50%, 100% { opacity: 0; }
       }
       @keyframes typeG {
-        0%, 15% { opacity: 0; }
-        16%, 100% { opacity: 1; }
+        0%, 2% { opacity: 0; }
+        4%, 100% { opacity: 1; }
       }
       @keyframes typeE {
-        0%, 25% { opacity: 0; }
-        26%, 100% { opacity: 1; }
+        0%, 4% { opacity: 0; }
+        6%, 100% { opacity: 1; }
       }
       @keyframes dropdownAppear {
-        0%, 30% { opacity: 0; transform: translateY(-4px); }
-        35%, 100% { opacity: 1; transform: translateY(0); }
+        0%, 6% { opacity: 0; transform: translateY(-4px); }
+        9%, 100% { opacity: 1; transform: translateY(0); }
       }
       @keyframes highlightFirst {
-        0%, 34% { opacity: 0; }
-        35%, 100% { opacity: 1; }
+        0%, 8% { opacity: 0; }
+        10%, 100% { opacity: 1; }
       }
-      @keyframes item1 { 0%, 35% { opacity: 0; } 38% { opacity: 1; } }
-      @keyframes item2 { 0%, 38% { opacity: 0; } 41% { opacity: 1; } }
-      @keyframes item3 { 0%, 41% { opacity: 0; } 44% { opacity: 1; } }
-      @keyframes item4 { 0%, 44% { opacity: 0; } 47% { opacity: 1; } }
-      @keyframes item5 { 0%, 47% { opacity: 0; } 50% { opacity: 1; } }
-      @keyframes item6 { 0%, 50% { opacity: 0; } 53% { opacity: 1; } }
-      @keyframes item7 { 0%, 53% { opacity: 0; } 56% { opacity: 1; } }
+      @keyframes item1 { 0%, 8% { opacity: 0; } 10% { opacity: 1; } }
+      @keyframes item2 { 0%, 9% { opacity: 0; } 11% { opacity: 1; } }
+      @keyframes item3 { 0%, 10% { opacity: 0; } 12% { opacity: 1; } }
+      @keyframes item4 { 0%, 11% { opacity: 0; } 13% { opacity: 1; } }
+      @keyframes item5 { 0%, 12% { opacity: 0; } 14% { opacity: 1; } }
+      @keyframes item6 { 0%, 13% { opacity: 0; } 15% { opacity: 1; } }
+      @keyframes item7 { 0%, 14% { opacity: 0; } 16% { opacity: 1; } }
       @keyframes detailAppear {
-        0%, 58% { opacity: 0; }
-        62%, 100% { opacity: 1; }
+        0%, 14% { opacity: 0; }
+        16%, 100% { opacity: 1; }
       }
       .cursor { animation: cursorBlink 1s infinite; }
       .typeG { animation: typeG 7s forwards; opacity: 0; }

@@ -27,7 +27,7 @@
 
   <!-- Icon: green rounded square with "Hu" -->
   <rect x="60" y="160" width="100" height="100" rx="18" ry="18" fill="#22c55e"/>
-  <text x="110" y="220" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="700" font-size="42" fill="white" text-anchor="middle" dominant-baseline="middle">Hu</text>
+  <text x="110" y="210" text-anchor="middle" dominant-baseline="central" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="42" font-weight="700" fill="#ffffff" letter-spacing="-2">Hu</text>
 
   <!-- Title -->
   <text x="180" y="195" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="700" font-size="44" fill="#ffffff">Hurl Toolkit</text>
@@ -175,7 +175,7 @@
   </g>
 
   <!-- Bottom: repo URL -->
-  <text x="600" y="590" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#666" text-anchor="middle">github.com/andreahlert/hurl-vscode-toolkit</text>
+  <text x="600" y="590" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#666" text-anchor="middle">github.com/atoolz/hurl-vscode-toolkit</text>
 
   <!-- Bottom green accent line -->
   <rect x="0" y="627" width="1200" height="3" fill="#22c55e" opacity="0.6"/>

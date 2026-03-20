@@ -6,21 +6,20 @@
         50%, 100% { opacity: 0; }
       }
       @keyframes cursorMove {
-        0%, 20% { transform: translate(0, 0); }
-        30%, 40% { transform: translate(82px, 90px); }
-        50%, 100% { transform: translate(82px, 90px); }
+        0%, 2% { transform: translate(0, 0); }
+        5%, 100% { transform: translate(82px, 90px); }
       }
       @keyframes tooltipAppear {
-        0%, 45% { opacity: 0; transform: translateY(4px); }
-        50%, 100% { opacity: 1; transform: translateY(0); }
+        0%, 6% { opacity: 0; transform: translateY(4px); }
+        10%, 100% { opacity: 1; transform: translateY(0); }
       }
       @keyframes hoverHighlight {
-        0%, 40% { fill: #b5cea8; }
-        45%, 100% { fill: #ffffff; text-decoration: underline; }
+        0%, 6% { fill: #b5cea8; }
+        10%, 100% { fill: #ffffff; text-decoration: underline; }
       }
       @keyframes underlineAppear {
-        0%, 40% { opacity: 0; }
-        45%, 100% { opacity: 1; }
+        0%, 6% { opacity: 0; }
+        10%, 100% { opacity: 1; }
       }
       .cursor { animation: cursorBlink 1s infinite; }
       .tooltip { animation: tooltipAppear 6s forwards; opacity: 0; }
