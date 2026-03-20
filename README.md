@@ -20,7 +20,9 @@
 
 Full TextMate grammar for `.hurl` files with support for HTTP methods, URLs, headers, status codes, sections, variables, embedded JSON/XML/GraphQL, assert predicates, filter functions, and more.
 
-![Syntax Highlighting](assets/demo-syntax.gif)
+<p align="center">
+  <img src="assets/demo-syntax.png" alt="Syntax Highlighting" width="800">
+</p>
 
 ### Run Requests (CodeLens)
 
@@ -45,7 +47,9 @@ Context-aware completions for:
 
 Hover over any keyword to see documentation. Methods, status codes, sections, options, assert predicates, filter functions, and headers all provide contextual information.
 
-![Hover Documentation](assets/demo-hover.gif)
+<p align="center">
+  <img src="assets/demo-hover.png" alt="Hover Documentation" width="800">
+</p>
 
 ### Diagnostics
 
@@ -56,6 +60,10 @@ Real-time error detection for:
 - Unknown section names
 - Invalid status codes (outside 100-599 range)
 - Unclosed variable references `{{`
+
+<p align="center">
+  <img src="assets/demo-diagnostics.png" alt="Diagnostics" width="800">
+</p>
 
 ### Snippets
 
