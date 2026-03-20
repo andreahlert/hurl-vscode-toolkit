@@ -1,0 +1,123 @@
+{
+  "name": "hurl-vscode-toolkit",
+  "displayName": "Hurl Toolkit",
+  "description": "Complete Hurl HTTP testing toolkit: syntax highlighting, run requests, response viewer, and IntelliSense for .hurl files",
+  "version": "0.1.3",
+  "publisher": "atoolz",
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atoolz/hurl-vscode-toolkit"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Testing",
+    "Snippets"
+  ],
+  "keywords": [
+    "hurl",
+    "http",
+    "api",
+    "testing",
+    "rest",
+    "request"
+  ],
+  "activationEvents": [
+    "onLanguage:hurl"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "hurl",
+        "aliases": [
+          "Hurl",
+          "hurl"
+        ],
+        "extensions": [
+          ".hurl"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/icon.svg",
+          "dark": "./assets/icon.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hurl",
+        "scopeName": "source.hurl",
+        "path": "./syntaxes/hurl.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.json": "json",
+          "meta.embedded.block.xml": "xml",
+          "meta.embedded.block.graphql": "graphql"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "hurl",
+        "path": "./snippets/hurl.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "hurl-toolkit.runEntry",
+        "title": "Hurl: Run Request Entry"
+      },
+      {
+        "command": "hurl-toolkit.runFile",
+        "title": "Hurl: Run Entire File"
+      }
+    ],
+    "configuration": {
+      "title": "Hurl Toolkit",
+      "properties": {
+        "hurl-toolkit.hurlPath": {
+          "type": "string",
+          "default": "hurl",
+          "description": "Path to the hurl executable"
+        },
+        "hurl-toolkit.showResponseInWebview": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show response in a webview panel instead of the output channel"
+        },
+        "hurl-toolkit.additionalArguments": {
+          "type": "string",
+          "default": "",
+          "description": "Additional arguments to pass to hurl when running requests"
+        },
+        "hurl-toolkit.variablesFile": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a variables file to use with --variables-file"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "tsc --noEmit",
+    "package": "vsce package",
+    "test:e2e": "tsc -p ./tsconfig.test.json && node ./dist/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.19.11",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
+    "typescript": "^5.3.3"
+  }
+}

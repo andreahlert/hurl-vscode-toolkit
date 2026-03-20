@@ -1,0 +1,180 @@
+{
+  "GET Request": {
+    "prefix": "hurl-get",
+    "body": [
+      "# ${1:Description}",
+      "GET ${2:http://localhost:8080/api/}${3:endpoint}",
+      "${4:Authorization: Bearer {{token\\}\\}}",
+      "",
+      "HTTP ${5:200}",
+      "[Asserts]",
+      "header \"Content-Type\" contains \"application/json\"",
+      "jsonpath \"$.${6:field}\" ${7:== \"${8:value}\"}",
+      ""
+    ],
+    "description": "GET request with assertions"
+  },
+  "POST JSON Request": {
+    "prefix": "hurl-post-json",
+    "body": [
+      "# ${1:Description}",
+      "POST ${2:http://localhost:8080/api/}${3:endpoint}",
+      "Content-Type: application/json",
+      "{",
+      "    \"${4:key}\": \"${5:value}\"",
+      "}",
+      "",
+      "HTTP ${6:201}",
+      "[Asserts]",
+      "jsonpath \"$.${7:id}\" exists",
+      ""
+    ],
+    "description": "POST request with JSON body and assertions"
+  },
+  "POST Form Request": {
+    "prefix": "hurl-post-form",
+    "body": [
+      "# ${1:Description}",
+      "POST ${2:http://localhost:8080/api/}${3:endpoint}",
+      "[FormParams]",
+      "${4:username}: ${5:john}",
+      "${6:password}: ${7:secret}",
+      "",
+      "HTTP ${8:200}",
+      ""
+    ],
+    "description": "POST request with form parameters"
+  },
+  "Authenticated Request": {
+    "prefix": "hurl-auth",
+    "body": [
+      "# ${1:Authenticated request}",
+      "${2|GET,POST,PUT,PATCH,DELETE|} ${3:http://localhost:8080/api/}${4:endpoint}",
+      "Authorization: Bearer {{${5:token}}}",
+      "",
+      "HTTP ${6:200}",
+      ""
+    ],
+    "description": "Request with Bearer token authentication"
+  },
+  "GraphQL Request": {
+    "prefix": "hurl-graphql",
+    "body": [
+      "# ${1:GraphQL query}",
+      "POST ${2:http://localhost:8080/graphql}",
+      "```graphql",
+      "{",
+      "  ${3:query} {",
+      "    ${4:field}",
+      "  }",
+      "}",
+      "```",
+      "",
+      "HTTP 200",
+      "[Asserts]",
+      "jsonpath \"$.data.${3:query}.${4:field}\" exists",
+      ""
+    ],
+    "description": "GraphQL request with assertions"
+  },
+  "File Upload": {
+    "prefix": "hurl-upload",
+    "body": [
+      "# ${1:File upload}",
+      "POST ${2:http://localhost:8080/api/}${3:upload}",
+      "[MultipartFormData]",
+      "${4:file}: file,${5:path/to/file.png}; ${6:image/png}",
+      "${7:description}: ${8:My file}",
+      "",
+      "HTTP ${9:200}",
+      ""
+    ],
+    "description": "Multipart file upload request"
+  },
+  "Capture Response": {
+    "prefix": "hurl-capture",
+    "body": [
+      "# ${1:Request with capture}",
+      "${2|GET,POST,PUT,PATCH,DELETE|} ${3:http://localhost:8080/api/}${4:endpoint}",
+      "${5:Content-Type: application/json}",
+      "",
+      "HTTP ${6:200}",
+      "[Captures]",
+      "${7:variable_name}: jsonpath \"$.${8:field}\"",
+      ""
+    ],
+    "description": "Request that captures response values"
+  },
+  "Chained Requests": {
+    "prefix": "hurl-chain",
+    "body": [
+      "# Step 1: Create resource",
+      "POST ${1:http://localhost:8080/api/}${2:resources}",
+      "Content-Type: application/json",
+      "{",
+      "    \"name\": \"${3:test}\"",
+      "}",
+      "",
+      "HTTP 201",
+      "[Captures]",
+      "${4:resource_id}: jsonpath \"$.id\"",
+      "",
+      "# Step 2: Get created resource",
+      "GET ${1:http://localhost:8080/api/}${2:resources}/{{${4:resource_id}}}",
+      "",
+      "HTTP 200",
+      "[Asserts]",
+      "jsonpath \"$.name\" == \"${3:test}\"",
+      "",
+      "# Step 3: Delete resource",
+      "DELETE ${1:http://localhost:8080/api/}${2:resources}/{{${4:resource_id}}}",
+      "",
+      "HTTP 204",
+      ""
+    ],
+    "description": "Chained create, read, delete requests"
+  },
+  "Full Test Template": {
+    "prefix": "hurl-full",
+    "body": [
+      "# ${1:API Test Suite}",
+      "# Variables: token, base_url",
+      "",
+      "# Health check",
+      "GET {{base_url}}/health",
+      "",
+      "HTTP 200",
+      "[Asserts]",
+      "jsonpath \"$.status\" == \"ok\"",
+      "",
+      "# Create resource",
+      "POST {{base_url}}/${2:resources}",
+      "Authorization: Bearer {{token}}",
+      "Content-Type: application/json",
+      "{",
+      "    \"name\": \"${3:test-item}\"",
+      "}",
+      "",
+      "HTTP 201",
+      "[Captures]",
+      "resource_id: jsonpath \"$.id\"",
+      "",
+      "# Get resource",
+      "GET {{base_url}}/${2:resources}/{{resource_id}}",
+      "Authorization: Bearer {{token}}",
+      "",
+      "HTTP 200",
+      "[Asserts]",
+      "jsonpath \"$.name\" == \"${3:test-item}\"",
+      "jsonpath \"$.id\" == {{resource_id}}",
+      "",
+      "# Cleanup",
+      "DELETE {{base_url}}/${2:resources}/{{resource_id}}",
+      "Authorization: Bearer {{token}}",
+      "",
+      "HTTP 204",
+      ""
+    ],
+    "description": "Complete test file template with CRUD operations"
+  }
+}

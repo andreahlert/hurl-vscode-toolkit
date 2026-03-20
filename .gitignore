@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.vsix
+.DS_Store
+out/
+POSTS.md
+assets/promo-*.png
+assets/promo-*.svg
+.vscode-test/
