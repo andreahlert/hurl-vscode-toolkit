@@ -2,7 +2,7 @@
   "name": "hurl-vscode-toolkit",
   "displayName": "Hurl Toolkit",
   "description": "Complete Hurl HTTP testing toolkit: syntax highlighting, run requests, response viewer, and IntelliSense for .hurl files",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "atoolz",
   "license": "MIT",
   "icon": "assets/icon.png",
@@ -10,6 +10,10 @@
     "type": "git",
     "url": "https://github.com/atoolz/hurl-vscode-toolkit"
   },
+  "bugs": {
+    "url": "https://github.com/atoolz/hurl-vscode-toolkit/issues"
+  },
+  "homepage": "https://github.com/atoolz/hurl-vscode-toolkit#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
