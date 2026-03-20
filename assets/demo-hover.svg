@@ -1,129 +1,107 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
   <defs>
     <style>
-      @keyframes cursorBlink {
-        0%, 49% { opacity: 1; }
-        50%, 100% { opacity: 0; }
-      }
-      @keyframes cursorMove {
-        0%, 2% { transform: translate(0, 0); }
-        5%, 100% { transform: translate(82px, 90px); }
-      }
-      @keyframes tooltipAppear {
-        0%, 6% { opacity: 0; transform: translateY(4px); }
-        10%, 100% { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes hoverHighlight {
-        0%, 6% { fill: #b5cea8; }
-        10%, 100% { fill: #ffffff; text-decoration: underline; }
-      }
-      @keyframes underlineAppear {
-        0%, 6% { opacity: 0; }
-        10%, 100% { opacity: 1; }
-      }
-      .cursor { animation: cursorBlink 1s infinite; }
-      .tooltip { animation: tooltipAppear 6s forwards; opacity: 0; }
-      .hover-underline { animation: underlineAppear 6s forwards; opacity: 0; }
+      @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      @keyframes tooltipAppear { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes underlineAppear { from { opacity: 0; } to { opacity: 1; } }
+      .mono { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+      .ui { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
     </style>
   </defs>
 
-  <!-- Background -->
-  <rect width="800" height="400" fill="#1e1e1e" rx="8" ry="8"/>
+  <!-- Window frame -->
+  <rect width="800" height="400" rx="8" fill="#1e1e1e"/>
+  <rect width="800" height="36" rx="8" fill="#323233"/>
+  <rect y="28" width="800" height="8" fill="#323233"/>
 
-  <!-- Title bar -->
-  <rect width="800" height="32" fill="#2d2d2d" rx="8" ry="8"/>
-  <rect y="20" width="800" height="12" fill="#2d2d2d"/>
-  <circle cx="16" cy="16" r="5" fill="#ff5f57"/>
-  <circle cx="34" cy="16" r="5" fill="#ffbd2e"/>
-  <circle cx="52" cy="16" r="5" fill="#28c840"/>
-  <rect x="72" y="4" width="130" height="24" rx="4" fill="#1e1e1e"/>
-  <text x="92" y="20" font-family="monospace" font-size="11" fill="#d4d4d4">health.hurl</text>
+  <!-- Window controls -->
+  <circle cx="20" cy="18" r="6" fill="#ff5f56"/>
+  <circle cx="40" cy="18" r="6" fill="#ffbd2e"/>
+  <circle cx="60" cy="18" r="6" fill="#27c93f"/>
+
+  <!-- Title -->
+  <text x="400" y="22" text-anchor="middle" class="ui" font-size="12" fill="#999">health.hurl - Hurl Toolkit</text>
+
+  <!-- Tab bar -->
+  <rect y="36" width="800" height="28" fill="#252526"/>
+  <rect x="0" y="36" width="130" height="28" fill="#1e1e1e"/>
+  <text x="14" y="54" class="ui" font-size="11" fill="#cccccc">health.hurl</text>
+  <rect x="0" y="62" width="130" height="2" fill="#22c55e"/>
 
   <!-- Line numbers gutter -->
-  <rect x="0" y="32" width="40" height="368" fill="#1a1a1a"/>
+  <rect x="0" y="64" width="44" height="336" fill="#1e1e1e"/>
 
-  <g font-family="'Cascadia Code', 'Fira Code', 'Consolas', monospace" font-size="14">
+  <!-- Line 1: GET -->
+  <text x="30" y="88" class="mono" font-size="13" fill="#5c6370" text-anchor="end">1</text>
+  <text x="52" y="88" class="mono" font-size="13" fill="#569cd6" font-weight="bold">GET</text>
+  <text x="86" y="88" class="mono" font-size="13" fill="#4ec9b0">https://api.example.com/health</text>
 
-    <!-- Line 1: GET -->
-    <text x="20" y="60" font-size="12" fill="#858585" text-anchor="middle">1</text>
-    <text x="50" y="60" fill="#569cd6" font-weight="bold">GET</text>
-    <text x="82" y="60" fill="#4ec9b0">https://api.example.com/health</text>
+  <!-- Line 2: Header -->
+  <text x="30" y="110" class="mono" font-size="13" fill="#5c6370" text-anchor="end">2</text>
+  <text x="52" y="110" class="mono" font-size="13" fill="#9cdcfe">Accept</text>
+  <text x="104" y="110" class="mono" font-size="13" fill="#d4d4d4">:</text>
+  <text x="116" y="110" class="mono" font-size="13" fill="#ce9178">application/json</text>
 
-    <!-- Line 2: Header -->
-    <text x="20" y="84" font-size="12" fill="#858585" text-anchor="middle">2</text>
-    <text x="50" y="84" fill="#9cdcfe">Accept</text>
-    <text x="100" y="84" fill="#d4d4d4">:</text>
-    <text x="110" y="84" fill="#ce9178">application/json</text>
+  <!-- Line 3: blank -->
+  <text x="30" y="132" class="mono" font-size="13" fill="#5c6370" text-anchor="end">3</text>
 
-    <!-- Line 3: blank -->
-    <text x="20" y="108" font-size="12" fill="#858585" text-anchor="middle">3</text>
+  <!-- Line 4: HTTP 200 (hover target) -->
+  <text x="30" y="154" class="mono" font-size="13" fill="#5c6370" text-anchor="end">4</text>
+  <text x="52" y="154" class="mono" font-size="13" fill="#569cd6">HTTP</text>
+  <text x="92" y="154" class="mono" font-size="13" fill="#b5cea8">200</text>
+  <line x1="92" y1="157" x2="118" y2="157" stroke="#b5cea8" stroke-width="1" style="animation: underlineAppear 0.3s ease-out 0.8s both;"/>
 
-    <!-- Line 4: HTTP 200 (hover target) -->
-    <text x="20" y="132" font-size="12" fill="#858585" text-anchor="middle">4</text>
-    <text x="50" y="132" fill="#569cd6">HTTP</text>
-    <!-- 200 with hover underline effect -->
-    <text x="84" y="132" fill="#b5cea8">200</text>
-    <line x1="84" y1="135" x2="110" y2="135" stroke="#b5cea8" stroke-width="1" class="hover-underline"/>
+  <!-- Line 5: blank -->
+  <text x="30" y="176" class="mono" font-size="13" fill="#5c6370" text-anchor="end">5</text>
 
-    <!-- Line 5: blank -->
-    <text x="20" y="156" font-size="12" fill="#858585" text-anchor="middle">5</text>
+  <!-- Line 6: [Asserts] -->
+  <text x="30" y="198" class="mono" font-size="13" fill="#5c6370" text-anchor="end">6</text>
+  <text x="52" y="198" class="mono" font-size="13" fill="#dcdcaa">[Asserts]</text>
 
-    <!-- Line 6: [Asserts] -->
-    <text x="20" y="180" font-size="12" fill="#858585" text-anchor="middle">6</text>
-    <text x="50" y="180" fill="#dcdcaa">[Asserts]</text>
+  <!-- Line 7: assert -->
+  <text x="30" y="220" class="mono" font-size="13" fill="#5c6370" text-anchor="end">7</text>
+  <text x="52" y="220" class="mono" font-size="13" fill="#c586c0">status</text>
+  <text x="104" y="220" class="mono" font-size="13" fill="#d4d4d4">==</text>
+  <text x="128" y="220" class="mono" font-size="13" fill="#b5cea8">200</text>
 
-    <!-- Line 7: assert -->
-    <text x="20" y="204" font-size="12" fill="#858585" text-anchor="middle">7</text>
-    <text x="50" y="204" fill="#c586c0">status</text>
-    <text x="100" y="204" fill="#d4d4d4">==</text>
-    <text x="120" y="204" fill="#b5cea8">200</text>
+  <!-- Line 8: assert -->
+  <text x="30" y="242" class="mono" font-size="13" fill="#5c6370" text-anchor="end">8</text>
+  <text x="52" y="242" class="mono" font-size="13" fill="#c586c0">jsonpath</text>
+  <text x="120" y="242" class="mono" font-size="13" fill="#ce9178">"$.status"</text>
+  <text x="212" y="242" class="mono" font-size="13" fill="#d4d4d4">==</text>
+  <text x="236" y="242" class="mono" font-size="13" fill="#ce9178">"healthy"</text>
 
-    <!-- Line 8: assert -->
-    <text x="20" y="228" font-size="12" fill="#858585" text-anchor="middle">8</text>
-    <text x="50" y="228" fill="#c586c0">jsonpath</text>
-    <text x="118" y="228" fill="#ce9178">"$.status"</text>
-    <text x="206" y="228" fill="#d4d4d4">==</text>
-    <text x="228" y="228" fill="#ce9178">"healthy"</text>
+  <!-- Line 9: assert -->
+  <text x="30" y="264" class="mono" font-size="13" fill="#5c6370" text-anchor="end">9</text>
+  <text x="52" y="264" class="mono" font-size="13" fill="#c586c0">jsonpath</text>
+  <text x="120" y="264" class="mono" font-size="13" fill="#ce9178">"$.uptime"</text>
+  <text x="212" y="264" class="mono" font-size="13" fill="#d4d4d4">&gt;=</text>
+  <text x="236" y="264" class="mono" font-size="13" fill="#b5cea8">0</text>
 
-    <!-- Line 9: assert -->
-    <text x="20" y="252" font-size="12" fill="#858585" text-anchor="middle">9</text>
-    <text x="50" y="252" fill="#c586c0">jsonpath</text>
-    <text x="118" y="252" fill="#ce9178">"$.uptime"</text>
-    <text x="206" y="252" fill="#d4d4d4">&gt;=</text>
-    <text x="228" y="252" fill="#b5cea8">0</text>
-
-    <!-- Line 10 -->
-    <text x="20" y="276" font-size="12" fill="#858585" text-anchor="middle">10</text>
-    <text x="50" y="276" fill="#c586c0">jsonpath</text>
-    <text x="118" y="276" fill="#ce9178">"$.version"</text>
-    <text x="214" y="276" fill="#c586c0">matches</text>
-    <text x="278" y="276" fill="#ce9178">"\\d+\\.\\d+\\.\\d+"</text>
-  </g>
+  <!-- Line 10 -->
+  <text x="30" y="286" class="mono" font-size="13" fill="#5c6370" text-anchor="end">10</text>
+  <text x="52" y="286" class="mono" font-size="13" fill="#c586c0">jsonpath</text>
+  <text x="120" y="286" class="mono" font-size="13" fill="#ce9178">"$.version"</text>
+  <text x="220" y="286" class="mono" font-size="13" fill="#c586c0">matches</text>
+  <text x="284" y="286" class="mono" font-size="13" fill="#ce9178">"\\d+\\.\\d+\\.\\d+"</text>
 
   <!-- Hover tooltip -->
-  <g class="tooltip">
-    <!-- Tooltip box -->
-    <rect x="70" y="60" width="420" height="68" rx="4" ry="4" fill="#252526" stroke="#454545" stroke-width="1"/>
-
-    <!-- Tooltip content -->
-    <text x="84" y="82" font-family="'Segoe UI', sans-serif" font-size="14" fill="#ffffff" font-weight="bold">200 OK</text>
-
-    <!-- Separator line -->
-    <line x1="84" y1="90" x2="476" y2="90" stroke="#454545" stroke-width="0.5"/>
-
-    <text x="84" y="108" font-family="'Segoe UI', sans-serif" font-size="12" fill="#aaaaaa">The request succeeded. The meaning of the success</text>
-    <text x="84" y="122" font-family="'Segoe UI', sans-serif" font-size="12" fill="#aaaaaa">depends on the HTTP method.</text>
+  <g style="animation: tooltipAppear 0.4s ease-out 0.8s both;">
+    <rect x="72" y="86" width="400" height="60" rx="4" fill="#252526" stroke="#454545" stroke-width="1"/>
+    <text x="86" y="108" class="ui" font-size="13" fill="#ffffff" font-weight="bold">200 OK</text>
+    <line x1="86" y1="114" x2="458" y2="114" stroke="#454545" stroke-width="0.5"/>
+    <text x="86" y="132" class="ui" font-size="11" fill="#aaaaaa">The request succeeded. The meaning of the success depends on the HTTP method.</text>
   </g>
 
   <!-- Mouse cursor (pointing at HTTP 200) -->
-  <g class="tooltip">
-    <g transform="translate(92, 133)">
+  <g style="animation: tooltipAppear 0.4s ease-out 0.8s both;">
+    <g transform="translate(100, 155)">
       <path d="M0,0 L0,16 L4,12 L8,20 L11,18 L7,10 L12,10 Z" fill="white" stroke="#333" stroke-width="0.5"/>
     </g>
   </g>
 
   <!-- Status bar -->
-  <rect x="0" y="376" width="800" height="24" fill="#1a7a3a"/>
-  <text x="12" y="392" font-family="monospace" font-size="11" fill="#fff">Hurl Toolkit</text>
-  <text x="720" y="392" font-family="monospace" font-size="11" fill="#fff">Ln 4, Col 8</text>
+  <rect x="0" y="380" width="800" height="20" fill="#22c55e"/>
+  <text x="12" y="394" class="ui" font-size="11" fill="#fff">Hurl Toolkit</text>
+  <text x="720" y="394" class="ui" font-size="11" fill="#fff">Ln 4, Col 8</text>
 </svg>

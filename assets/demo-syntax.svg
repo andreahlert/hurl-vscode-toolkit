@@ -1,146 +1,117 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
   <defs>
     <style>
-      @keyframes cursorBlink {
-        0%, 49% { opacity: 1; }
-        50%, 100% { opacity: 0; }
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes lineAppear1 { 0%, 2% { opacity: 0; } 4% { opacity: 1; } }
-      @keyframes lineAppear2 { 0%, 4% { opacity: 0; } 6% { opacity: 1; } }
-      @keyframes lineAppear3 { 0%, 6% { opacity: 0; } 8% { opacity: 1; } }
-      @keyframes lineAppear4 { 0%, 8% { opacity: 0; } 10% { opacity: 1; } }
-      @keyframes lineAppear5 { 0%, 10% { opacity: 0; } 12% { opacity: 1; } }
-      @keyframes lineAppear6 { 0%, 12% { opacity: 0; } 14% { opacity: 1; } }
-      @keyframes lineAppear7 { 0%, 14% { opacity: 0; } 16% { opacity: 1; } }
-      @keyframes lineAppear8 { 0%, 16% { opacity: 0; } 18% { opacity: 1; } }
-      @keyframes lineAppear9 { 0%, 18% { opacity: 0; } 20% { opacity: 1; } }
-      @keyframes lineAppear10 { 0%, 20% { opacity: 0; } 22% { opacity: 1; } }
-      @keyframes codelensGlow {
-        0%, 1% { opacity: 0; }
-        2% { opacity: 0.5; }
-        3%, 100% { opacity: 1; }
-      }
-      .cursor { animation: cursorBlink 1s infinite; }
-      .line1 { animation: lineAppear1 6s forwards; opacity: 0; }
-      .line2 { animation: lineAppear2 6s forwards; opacity: 0; }
-      .line3 { animation: lineAppear3 6s forwards; opacity: 0; }
-      .line4 { animation: lineAppear4 6s forwards; opacity: 0; }
-      .line5 { animation: lineAppear5 6s forwards; opacity: 0; }
-      .line6 { animation: lineAppear6 6s forwards; opacity: 0; }
-      .line7 { animation: lineAppear7 6s forwards; opacity: 0; }
-      .line8 { animation: lineAppear8 6s forwards; opacity: 0; }
-      .line9 { animation: lineAppear9 6s forwards; opacity: 0; }
-      .line10 { animation: lineAppear10 6s forwards; opacity: 0; }
-      .codelens { animation: codelensGlow 6s forwards; opacity: 0; }
+      @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      @keyframes lineAppear1 { 0%, 5% { opacity: 0; } 8% { opacity: 1; } }
+      @keyframes lineAppear2 { 0%, 10% { opacity: 0; } 13% { opacity: 1; } }
+      @keyframes lineAppear3 { 0%, 15% { opacity: 0; } 18% { opacity: 1; } }
+      @keyframes lineAppear4 { 0%, 20% { opacity: 0; } 23% { opacity: 1; } }
+      @keyframes lineAppear5 { 0%, 25% { opacity: 0; } 28% { opacity: 1; } }
+      @keyframes lineAppear6 { 0%, 30% { opacity: 0; } 33% { opacity: 1; } }
+      @keyframes lineAppear7 { 0%, 35% { opacity: 0; } 38% { opacity: 1; } }
+      @keyframes lineAppear8 { 0%, 40% { opacity: 0; } 43% { opacity: 1; } }
+      @keyframes lineAppear9 { 0%, 45% { opacity: 0; } 48% { opacity: 1; } }
+      @keyframes codelensGlow { 0%, 3% { opacity: 0; } 6% { opacity: 1; } }
+      .mono { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+      .ui { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
     </style>
   </defs>
 
-  <!-- Background -->
-  <rect width="800" height="400" fill="#1e1e1e" rx="8" ry="8"/>
+  <!-- Window frame -->
+  <rect width="800" height="400" rx="8" fill="#1e1e1e"/>
+  <rect width="800" height="36" rx="8" fill="#323233"/>
+  <rect y="28" width="800" height="8" fill="#323233"/>
 
-  <!-- Title bar -->
-  <rect width="800" height="32" fill="#2d2d2d" rx="8" ry="8"/>
-  <rect y="20" width="800" height="12" fill="#2d2d2d"/>
-  <circle cx="16" cy="16" r="5" fill="#ff5f57"/>
-  <circle cx="34" cy="16" r="5" fill="#ffbd2e"/>
-  <circle cx="52" cy="16" r="5" fill="#28c840"/>
-  <rect x="72" y="4" width="120" height="24" rx="4" fill="#1e1e1e"/>
-  <text x="92" y="20" font-family="monospace" font-size="11" fill="#d4d4d4">login.hurl</text>
+  <!-- Window controls -->
+  <circle cx="20" cy="18" r="6" fill="#ff5f56"/>
+  <circle cx="40" cy="18" r="6" fill="#ffbd2e"/>
+  <circle cx="60" cy="18" r="6" fill="#27c93f"/>
+
+  <!-- Title -->
+  <text x="400" y="22" text-anchor="middle" class="ui" font-size="12" fill="#999">login.hurl - Hurl Toolkit</text>
+
+  <!-- Tab bar -->
+  <rect y="36" width="800" height="28" fill="#252526"/>
+  <rect x="0" y="36" width="120" height="28" fill="#1e1e1e"/>
+  <text x="14" y="54" class="ui" font-size="11" fill="#cccccc">login.hurl</text>
+  <rect x="0" y="62" width="120" height="2" fill="#22c55e"/>
 
   <!-- Line numbers gutter -->
-  <rect x="0" y="32" width="40" height="368" fill="#1a1a1a"/>
+  <rect x="0" y="64" width="44" height="336" fill="#1e1e1e"/>
 
-  <!-- Code content -->
-  <g font-family="'Cascadia Code', 'Fira Code', 'Consolas', monospace" font-size="14">
-
-    <!-- CodeLens -->
-    <g class="codelens">
-      <text x="50" y="55" font-size="12" fill="#22c55e">&#9654; Run Request  |  &#9654; Run All</text>
-    </g>
-
-    <!-- Line 1: GET -->
-    <g class="line1">
-      <text x="20" y="78" font-size="12" fill="#858585" text-anchor="middle">1</text>
-      <text x="50" y="78" fill="#569cd6" font-weight="bold">GET</text>
-      <text x="82" y="78" fill="#4ec9b0">https://api.example.com/login</text>
-    </g>
-
-    <!-- Line 2: Header -->
-    <g class="line2">
-      <text x="20" y="102" font-size="12" fill="#858585" text-anchor="middle">2</text>
-      <text x="50" y="102" fill="#9cdcfe">Accept</text>
-      <text x="100" y="102" fill="#d4d4d4">:</text>
-      <text x="110" y="102" fill="#ce9178">application/json</text>
-    </g>
-
-    <!-- Line 3: Header -->
-    <g class="line3">
-      <text x="20" y="126" font-size="12" fill="#858585" text-anchor="middle">3</text>
-      <text x="50" y="126" fill="#9cdcfe">X-Request-Id</text>
-      <text x="160" y="126" fill="#d4d4d4">:</text>
-      <text x="170" y="126" fill="#ce9178">{{request_id}}</text>
-    </g>
-
-    <!-- Line 4: blank -->
-    <g class="line4">
-      <text x="20" y="150" font-size="12" fill="#858585" text-anchor="middle">4</text>
-    </g>
-
-    <!-- Line 5: HTTP 200 -->
-    <g class="line5">
-      <text x="20" y="174" font-size="12" fill="#858585" text-anchor="middle">5</text>
-      <text x="50" y="174" fill="#569cd6">HTTP</text>
-      <text x="84" y="174" fill="#b5cea8">200</text>
-    </g>
-
-    <!-- Line 6: blank -->
-    <g class="line6">
-      <text x="20" y="198" font-size="12" fill="#858585" text-anchor="middle">6</text>
-    </g>
-
-    <!-- Line 7: [Asserts] -->
-    <g class="line7">
-      <text x="20" y="222" font-size="12" fill="#858585" text-anchor="middle">7</text>
-      <text x="50" y="222" fill="#dcdcaa">[Asserts]</text>
-    </g>
-
-    <!-- Line 8: jsonpath assert -->
-    <g class="line8">
-      <text x="20" y="246" font-size="12" fill="#858585" text-anchor="middle">8</text>
-      <text x="50" y="246" fill="#c586c0">jsonpath</text>
-      <text x="118" y="246" fill="#ce9178">"$.token"</text>
-      <text x="198" y="246" fill="#c586c0">exists</text>
-    </g>
-
-    <!-- Line 9: jsonpath assert -->
-    <g class="line9">
-      <text x="20" y="270" font-size="12" fill="#858585" text-anchor="middle">9</text>
-      <text x="50" y="270" fill="#c586c0">jsonpath</text>
-      <text x="118" y="270" fill="#ce9178">"$.token"</text>
-      <text x="198" y="270" fill="#c586c0">isString</text>
-    </g>
-
-    <!-- Line 10: jsonpath assert with == -->
-    <g class="line10">
-      <text x="20" y="294" font-size="12" fill="#858585" text-anchor="middle">10</text>
-      <text x="50" y="294" fill="#c586c0">jsonpath</text>
-      <text x="118" y="294" fill="#ce9178">"$.status"</text>
-      <text x="206" y="294" fill="#d4d4d4">==</text>
-      <text x="228" y="294" fill="#ce9178">"ok"</text>
-    </g>
-
-    <!-- Cursor -->
-    <rect x="268" y="281" width="2" height="16" fill="#d4d4d4" class="cursor"/>
+  <!-- CodeLens -->
+  <g style="animation: codelensGlow 6s forwards; opacity: 0;">
+    <text x="52" y="84" class="mono" font-size="11" fill="#22c55e">&#9654; Run Request  |  &#9654; Run All</text>
   </g>
 
+  <!-- Line 1: GET -->
+  <g style="animation: lineAppear1 6s forwards; opacity: 0;">
+    <text x="30" y="106" class="mono" font-size="13" fill="#5c6370" text-anchor="end">1</text>
+    <text x="52" y="106" class="mono" font-size="13" fill="#569cd6" font-weight="bold">GET</text>
+    <text x="86" y="106" class="mono" font-size="13" fill="#4ec9b0">https://api.example.com/login</text>
+  </g>
+
+  <!-- Line 2: Header -->
+  <g style="animation: lineAppear2 6s forwards; opacity: 0;">
+    <text x="30" y="128" class="mono" font-size="13" fill="#5c6370" text-anchor="end">2</text>
+    <text x="52" y="128" class="mono" font-size="13" fill="#9cdcfe">Accept</text>
+    <text x="104" y="128" class="mono" font-size="13" fill="#d4d4d4">:</text>
+    <text x="116" y="128" class="mono" font-size="13" fill="#ce9178">application/json</text>
+  </g>
+
+  <!-- Line 3: Header -->
+  <g style="animation: lineAppear3 6s forwards; opacity: 0;">
+    <text x="30" y="150" class="mono" font-size="13" fill="#5c6370" text-anchor="end">3</text>
+    <text x="52" y="150" class="mono" font-size="13" fill="#9cdcfe">X-Request-Id</text>
+    <text x="160" y="150" class="mono" font-size="13" fill="#d4d4d4">:</text>
+    <text x="172" y="150" class="mono" font-size="13" fill="#ce9178">{{request_id}}</text>
+  </g>
+
+  <!-- Line 4: blank -->
+  <g style="animation: lineAppear4 6s forwards; opacity: 0;">
+    <text x="30" y="172" class="mono" font-size="13" fill="#5c6370" text-anchor="end">4</text>
+  </g>
+
+  <!-- Line 5: HTTP 200 -->
+  <g style="animation: lineAppear5 6s forwards; opacity: 0;">
+    <text x="30" y="194" class="mono" font-size="13" fill="#5c6370" text-anchor="end">5</text>
+    <text x="52" y="194" class="mono" font-size="13" fill="#569cd6">HTTP</text>
+    <text x="92" y="194" class="mono" font-size="13" fill="#b5cea8">200</text>
+  </g>
+
+  <!-- Line 6: blank -->
+  <g style="animation: lineAppear6 6s forwards; opacity: 0;">
+    <text x="30" y="216" class="mono" font-size="13" fill="#5c6370" text-anchor="end">6</text>
+  </g>
+
+  <!-- Line 7: [Asserts] -->
+  <g style="animation: lineAppear7 6s forwards; opacity: 0;">
+    <text x="30" y="238" class="mono" font-size="13" fill="#5c6370" text-anchor="end">7</text>
+    <text x="52" y="238" class="mono" font-size="13" fill="#dcdcaa">[Asserts]</text>
+  </g>
+
+  <!-- Line 8: jsonpath assert -->
+  <g style="animation: lineAppear8 6s forwards; opacity: 0;">
+    <text x="30" y="260" class="mono" font-size="13" fill="#5c6370" text-anchor="end">8</text>
+    <text x="52" y="260" class="mono" font-size="13" fill="#c586c0">jsonpath</text>
+    <text x="120" y="260" class="mono" font-size="13" fill="#ce9178">"$.token"</text>
+    <text x="204" y="260" class="mono" font-size="13" fill="#c586c0">exists</text>
+  </g>
+
+  <!-- Line 9: jsonpath assert -->
+  <g style="animation: lineAppear9 6s forwards; opacity: 0;">
+    <text x="30" y="282" class="mono" font-size="13" fill="#5c6370" text-anchor="end">9</text>
+    <text x="52" y="282" class="mono" font-size="13" fill="#c586c0">jsonpath</text>
+    <text x="120" y="282" class="mono" font-size="13" fill="#ce9178">"$.status"</text>
+    <text x="212" y="282" class="mono" font-size="13" fill="#d4d4d4">==</text>
+    <text x="236" y="282" class="mono" font-size="13" fill="#ce9178">"ok"</text>
+  </g>
+
+  <!-- Cursor -->
+  <rect x="272" y="270" width="2" height="16" fill="#aeafad" style="animation: cursorBlink 1.2s step-end infinite;"/>
+
   <!-- Status bar -->
-  <rect x="0" y="376" width="800" height="24" fill="#22c55e" rx="0"/>
-  <rect x="0" y="376" width="800" height="4" fill="#22c55e"/>
-  <rect x="0" y="380" width="800" height="20" fill="#1a7a3a"/>
-  <text x="12" y="395" font-family="monospace" font-size="11" fill="#fff">Hurl Toolkit</text>
-  <text x="720" y="395" font-family="monospace" font-size="11" fill="#fff">Ln 10, Col 28</text>
+  <rect x="0" y="380" width="800" height="20" rx="0" fill="#22c55e"/>
+  <text x="12" y="394" class="ui" font-size="11" fill="#fff">Hurl Toolkit</text>
+  <text x="720" y="394" class="ui" font-size="11" fill="#fff">Ln 9, Col 20</text>
 </svg>
