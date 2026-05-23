@@ -2,38 +2,38 @@ import * as vscode from "vscode";
 import { parseHurlEntries } from "../utils/hurlParser";
 
 export class HurlCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
   provideCodeLenses(
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): vscode.CodeLens[] {
-    const entries = parseHurlEntries(document);
+    const entries = parseHurlEntries( document );
     const lenses: vscode.CodeLens[] = [];
 
-    for (const entry of entries) {
-      const range = new vscode.Range(entry.startLine, 0, entry.startLine, 0);
+    for ( const entry of entries ) {
+      const range = new vscode.Range( entry.startLine, 0, entry.startLine, 0 );
 
       // Run this single entry
       lenses.push(
-        new vscode.CodeLens(range, {
+        new vscode.CodeLens( range, {
           title: "$(play) Run Request",
           command: "hurl-toolkit.runEntry",
-          arguments: [document.uri, entry.entryIndex + 1],
+          arguments: [ document.uri, entry.entryIndex + 1 ],
           tooltip: `Run this ${entry.method} request with hurl`,
-        })
+        } )
       );
 
       // Run entire file (only on the first entry)
-      if (entry.entryIndex === 0) {
+      if ( entry.entryIndex === 0 ) {
         lenses.push(
-          new vscode.CodeLens(range, {
+          new vscode.CodeLens( range, {
             title: "$(run-all) Run All",
             command: "hurl-toolkit.runFile",
-            arguments: [document.uri],
+            arguments: [ document.uri ],
             tooltip: "Run all requests in this file",
-          })
+          } )
         );
       }
     }
@@ -44,136 +44,136 @@ export class HurlCodeLensProvider implements vscode.CodeLensProvider {
 
 export function createRunEntryCommand(
   outputChannel: vscode.OutputChannel
-): (uri: vscode.Uri, entryIndex: number) => Promise<void> {
-  return async (uri: vscode.Uri, entryIndex: number) => {
-    const config = vscode.workspace.getConfiguration("hurl-toolkit");
-    const hurlPath = config.get<string>("hurlPath", "hurl");
-    const showWebview = config.get<boolean>("showResponseInWebview", false);
-    const additionalArgs = config.get<string>("additionalArguments", "");
-    const variablesFile = config.get<string>("variablesFile", "");
+): ( uri: vscode.Uri, entryIndex: number ) => Promise<void> {
+  return async ( uri: vscode.Uri, entryIndex: number ) => {
+    const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
+    const hurlPath = config.get<string>( "hurlPath", "hurl" );
+    const showWebview = config.get<boolean>( "showResponseInWebview", false );
+    const additionalArgs = config.get<string>( "additionalArguments", "" );
+    const variablesFile = config.get<string>( "variablesFile", "" );
 
-    const args: string[] = ["--very-verbose", "--entry", String(entryIndex)];
+    const args: string[] = [ "--very-verbose", "--from-entry", String( entryIndex ), "--to-entry", String( entryIndex ) ];
 
-    if (variablesFile) {
-      args.push("--variables-file", variablesFile);
+    if ( variablesFile ) {
+      args.push( "--variables-file", variablesFile );
     }
 
-    if (additionalArgs) {
-      args.push(...additionalArgs.split(/\s+/).filter(Boolean));
+    if ( additionalArgs ) {
+      args.push( ...additionalArgs.split( /\s+/ ).filter( Boolean ) );
     }
 
-    args.push(uri.fsPath);
+    args.push( uri.fsPath );
 
     outputChannel.clear();
-    outputChannel.show(true);
-    outputChannel.appendLine(`> ${hurlPath} ${args.join(" ")}`);
-    outputChannel.appendLine("");
+    outputChannel.show( true );
+    outputChannel.appendLine( `> ${hurlPath} ${args.join( " " )}` );
+    outputChannel.appendLine( "" );
 
     try {
-      const { execFile } = await import("child_process");
-      const { promisify } = await import("util");
-      const execFileAsync = promisify(execFile);
+      const { execFile } = await import( "node:child_process" );
+      const { promisify } = await import( "node:util" );
+      const execFileAsync = promisify( execFile );
 
-      const result = await execFileAsync(hurlPath, args, {
-        cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+      const result = await execFileAsync( hurlPath, args, {
+        cwd: vscode.workspace.workspaceFolders?.[ 0 ]?.uri.fsPath,
         timeout: 30000,
         maxBuffer: 10 * 1024 * 1024,
-      });
+      } );
 
-      if (result.stderr) {
-        outputChannel.appendLine(result.stderr);
+      if ( result.stderr ) {
+        outputChannel.appendLine( result.stderr );
       }
-      if (result.stdout) {
-        outputChannel.appendLine(result.stdout);
+      if ( result.stdout ) {
+        outputChannel.appendLine( result.stdout );
       }
 
-      outputChannel.appendLine("");
-      outputChannel.appendLine("--- Request completed successfully ---");
+      outputChannel.appendLine( "" );
+      outputChannel.appendLine( "--- Request completed successfully ---" );
 
-      if (showWebview && result.stdout) {
-        showResponseWebview(result.stdout, result.stderr);
+      if ( showWebview && result.stdout ) {
+        showResponseWebview( result.stdout, result.stderr );
       }
-    } catch (err: unknown) {
+    } catch ( err: unknown ) {
       const error = err as { stderr?: string; stdout?: string; message?: string };
-      if (error.stderr) {
-        outputChannel.appendLine(error.stderr);
+      if ( error.stderr ) {
+        outputChannel.appendLine( error.stderr );
       }
-      if (error.stdout) {
-        outputChannel.appendLine(error.stdout);
+      if ( error.stdout ) {
+        outputChannel.appendLine( error.stdout );
       }
-      if (error.message && !error.stderr) {
-        outputChannel.appendLine(`Error: ${error.message}`);
+      if ( error.message && !error.stderr ) {
+        outputChannel.appendLine( `Error: ${error.message}` );
       }
-      outputChannel.appendLine("");
-      outputChannel.appendLine("--- Request failed ---");
+      outputChannel.appendLine( "" );
+      outputChannel.appendLine( "--- Request failed ---" );
     }
   };
 }
 
 export function createRunFileCommand(
   outputChannel: vscode.OutputChannel
-): (uri: vscode.Uri) => Promise<void> {
-  return async (uri: vscode.Uri) => {
-    const config = vscode.workspace.getConfiguration("hurl-toolkit");
-    const hurlPath = config.get<string>("hurlPath", "hurl");
-    const additionalArgs = config.get<string>("additionalArguments", "");
-    const variablesFile = config.get<string>("variablesFile", "");
+): ( uri: vscode.Uri ) => Promise<void> {
+  return async ( uri: vscode.Uri ) => {
+    const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
+    const hurlPath = config.get<string>( "hurlPath", "hurl" );
+    const additionalArgs = config.get<string>( "additionalArguments", "" );
+    const variablesFile = config.get<string>( "variablesFile", "" );
 
-    const args: string[] = ["--very-verbose"];
+    const args: string[] = [ "--very-verbose" ];
 
-    if (variablesFile) {
-      args.push("--variables-file", variablesFile);
+    if ( variablesFile ) {
+      args.push( "--variables-file", variablesFile );
     }
 
-    if (additionalArgs) {
-      args.push(...additionalArgs.split(/\s+/).filter(Boolean));
+    if ( additionalArgs ) {
+      args.push( ...additionalArgs.split( /\s+/ ).filter( Boolean ) );
     }
 
-    args.push(uri.fsPath);
+    args.push( uri.fsPath );
 
     outputChannel.clear();
-    outputChannel.show(true);
-    outputChannel.appendLine(`> ${hurlPath} ${args.join(" ")}`);
-    outputChannel.appendLine("");
+    outputChannel.show( true );
+    outputChannel.appendLine( `> ${hurlPath} ${args.join( " " )}` );
+    outputChannel.appendLine( "" );
 
     try {
-      const { execFile } = await import("child_process");
-      const { promisify } = await import("util");
-      const execFileAsync = promisify(execFile);
+      const { execFile } = await import( "node:child_process" );
+      const { promisify } = await import( "node:util" );
+      const execFileAsync = promisify( execFile );
 
-      const result = await execFileAsync(hurlPath, args, {
-        cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+      const result = await execFileAsync( hurlPath, args, {
+        cwd: vscode.workspace.workspaceFolders?.[ 0 ]?.uri.fsPath,
         timeout: 60000,
         maxBuffer: 10 * 1024 * 1024,
-      });
+      } );
 
-      if (result.stderr) {
-        outputChannel.appendLine(result.stderr);
+      if ( result.stderr ) {
+        outputChannel.appendLine( result.stderr );
       }
-      if (result.stdout) {
-        outputChannel.appendLine(result.stdout);
+      if ( result.stdout ) {
+        outputChannel.appendLine( result.stdout );
       }
 
-      outputChannel.appendLine("");
-      outputChannel.appendLine("--- All requests completed successfully ---");
-    } catch (err: unknown) {
+      outputChannel.appendLine( "" );
+      outputChannel.appendLine( "--- All requests completed successfully ---" );
+    } catch ( err: unknown ) {
       const error = err as { stderr?: string; stdout?: string; message?: string };
-      if (error.stderr) {
-        outputChannel.appendLine(error.stderr);
+      if ( error.stderr ) {
+        outputChannel.appendLine( error.stderr );
       }
-      if (error.stdout) {
-        outputChannel.appendLine(error.stdout);
+      if ( error.stdout ) {
+        outputChannel.appendLine( error.stdout );
       }
-      if (error.message && !error.stderr) {
-        outputChannel.appendLine(`Error: ${error.message}`);
+      if ( error.message && !error.stderr ) {
+        outputChannel.appendLine( `Error: ${error.message}` );
       }
-      outputChannel.appendLine("");
-      outputChannel.appendLine("--- Execution failed ---");
+      outputChannel.appendLine( "" );
+      outputChannel.appendLine( "--- Execution failed ---" );
     }
   };
 }
 
-function showResponseWebview(stdout: string, stderr: string): void {
+function showResponseWebview( stdout: string, stderr: string ): void {
   const panel = vscode.window.createWebviewPanel(
     "hurlResponse",
     "Hurl Response",
@@ -182,24 +182,24 @@ function showResponseWebview(stdout: string, stderr: string): void {
   );
 
   // Try to parse response body from verbose output
-  const bodyMatch = stderr.match(/\n\n([\s\S]*?)$/);
-  const responseBody = bodyMatch ? bodyMatch[1] : stdout;
+  const bodyMatch = new RegExp( /\n\n([\s\S]*?)$/ ).exec( stderr );
+  const responseBody = bodyMatch ? bodyMatch[ 1 ] : stdout;
 
   // Try to detect if it's JSON
   let formattedBody: string;
   try {
-    const parsed = JSON.parse(responseBody.trim());
-    formattedBody = `<pre><code>${escapeHtml(JSON.stringify(parsed, null, 2))}</code></pre>`;
+    const parsed = JSON.parse( responseBody.trim() );
+    formattedBody = `<pre><code>${escapeHtml( JSON.stringify( parsed, null, 2 ) )}</code></pre>`;
   } catch {
-    formattedBody = `<pre><code>${escapeHtml(responseBody)}</code></pre>`;
+    formattedBody = `<pre><code>${escapeHtml( responseBody )}</code></pre>`;
   }
 
   // Extract status and headers from verbose output
   const headerLines = stderr
-    .split("\n")
-    .filter((l) => l.startsWith("< "))
-    .map((l) => escapeHtml(l.substring(2)))
-    .join("\n");
+    .split( "\n" )
+    .filter( ( l ) => l.startsWith( "< " ) )
+    .map( ( l ) => escapeHtml( l.substring( 2 ) ) )
+    .join( "\n" );
 
   panel.webview.html = `<!DOCTYPE html>
 <html lang="en">
@@ -222,10 +222,10 @@ function showResponseWebview(stdout: string, stderr: string): void {
 </html>`;
 }
 
-function escapeHtml(str: string): string {
+function escapeHtml( str: string ): string {
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replaceAll( '&', "&amp;" )
+    .replaceAll( '<', "&lt;" )
+    .replaceAll( '>', "&gt;" )
+    .replaceAll( '"', "&quot;" );
 }
