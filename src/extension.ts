@@ -10,8 +10,8 @@ import {
 
 const HURL_SELECTOR: vscode.DocumentSelector = { language: "hurl", scheme: "file" };
 
-export function activate(context: vscode.ExtensionContext): void {
-  const outputChannel = vscode.window.createOutputChannel("Hurl Toolkit");
+export function activate( context: vscode.ExtensionContext ): void {
+  const outputChannel = vscode.window.createOutputChannel( "Hurl Toolkit" );
 
   // Completion provider
   context.subscriptions.push(
@@ -27,62 +27,62 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Hover provider
   context.subscriptions.push(
-    vscode.languages.registerHoverProvider(HURL_SELECTOR, new HurlHoverProvider())
+    vscode.languages.registerHoverProvider( HURL_SELECTOR, new HurlHoverProvider() )
   );
 
   // Diagnostics
-  const diagnosticCollection = vscode.languages.createDiagnosticCollection("hurl");
-  const diagnosticProvider = new HurlDiagnosticProvider(diagnosticCollection);
-  context.subscriptions.push(diagnosticCollection);
+  const diagnosticCollection = vscode.languages.createDiagnosticCollection( "hurl" );
+  const diagnosticProvider = new HurlDiagnosticProvider( diagnosticCollection );
+  context.subscriptions.push( diagnosticCollection );
 
   // Update diagnostics on open, change, and save
-  if (vscode.window.activeTextEditor?.document.languageId === "hurl") {
-    diagnosticProvider.updateDiagnostics(vscode.window.activeTextEditor.document);
+  if ( vscode.window.activeTextEditor?.document.languageId === "hurl" ) {
+    diagnosticProvider.updateDiagnostics( vscode.window.activeTextEditor.document );
   }
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument((doc) => {
-      if (doc.languageId === "hurl") {
-        diagnosticProvider.updateDiagnostics(doc);
+    vscode.workspace.onDidOpenTextDocument( ( doc ) => {
+      if ( doc.languageId === "hurl" ) {
+        diagnosticProvider.updateDiagnostics( doc );
       }
-    })
+    } )
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.languageId === "hurl") {
-        diagnosticProvider.updateDiagnostics(event.document);
+    vscode.workspace.onDidChangeTextDocument( ( event ) => {
+      if ( event.document.languageId === "hurl" ) {
+        diagnosticProvider.updateDiagnostics( event.document );
       }
-    })
+    } )
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((doc) => {
-      diagnosticCollection.delete(doc.uri);
-    })
+    vscode.workspace.onDidCloseTextDocument( ( doc ) => {
+      diagnosticCollection.delete( doc.uri );
+    } )
   );
 
   // CodeLens provider
   context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider(HURL_SELECTOR, new HurlCodeLensProvider())
+    vscode.languages.registerCodeLensProvider( HURL_SELECTOR, new HurlCodeLensProvider() )
   );
 
   // Run commands
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "hurl-toolkit.runEntry",
-      createRunEntryCommand(outputChannel)
+      createRunEntryCommand( outputChannel )
     )
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "hurl-toolkit.runFile",
-      createRunFileCommand(outputChannel)
+      createRunFileCommand( outputChannel )
     )
   );
 
-  context.subscriptions.push(outputChannel);
+  context.subscriptions.push( outputChannel );
 }
 
 export function deactivate(): void {

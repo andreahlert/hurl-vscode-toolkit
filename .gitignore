@@ -7,3 +7,5 @@ POSTS.md
 assets/promo-*.png
 assets/promo-*.svg
 .vscode-test/
+.vscode/settings.json
+test-fixtures/.vscode/settings.json
