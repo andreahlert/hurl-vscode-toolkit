@@ -2,6 +2,7 @@ export interface SectionInfo {
   name: string;
   description: string;
   context: "request" | "response" | "both";
+  canonicalName?: string;
 }
 
 export const SECTIONS: SectionInfo[] = [
@@ -12,9 +13,23 @@ export const SECTIONS: SectionInfo[] = [
     context: "request",
   },
   {
+    name: "Query",
+    canonicalName: "QueryStringParams",
+    description:
+      "Alias of [QueryStringParams]. Defines query string parameters appended to the URL.",
+    context: "request",
+  },
+  {
     name: "FormParams",
     description:
       "Defines form parameters for application/x-www-form-urlencoded content type. Each parameter is a key-value pair.",
+    context: "request",
+  },
+  {
+    name: "Form",
+    canonicalName: "FormParams",
+    description:
+      "Alias of [FormParams]. Defines form parameters for application/x-www-form-urlencoded content type.",
     context: "request",
   },
   {
@@ -24,10 +39,17 @@ export const SECTIONS: SectionInfo[] = [
     context: "request",
   },
   {
+    name: "Multipart",
+    canonicalName: "MultipartFormData",
+    description:
+      "Alias of [MultipartFormData]. Defines multipart form data with inline values and file references.",
+    context: "request",
+  },
+  {
     name: "Cookies",
     description:
-      "Defines cookies to send with the request, or assert response cookies in the response section.",
-    context: "both",
+      "Defines cookies to send with the request. Cookie assertions are done with `cookie` queries in [Asserts].",
+    context: "request",
   },
   {
     name: "Options",
@@ -55,4 +77,4 @@ export const SECTIONS: SectionInfo[] = [
   },
 ];
 
-export const SECTION_NAMES = SECTIONS.map((s) => s.name);
+export const SECTION_NAMES = SECTIONS.map( ( s ) => s.name );

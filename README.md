@@ -26,7 +26,7 @@ Full TextMate grammar for `.hurl` files with support for HTTP methods, URLs, hea
 
 ### Run Requests (CodeLens)
 
-Click **Run Request** above any HTTP method to execute it with `hurl`. Click **Run All** to execute every request in the file. Output is displayed in a dedicated output channel, with an optional webview panel for formatted responses.
+Click **Run Request** above any HTTP method to execute it with `hurl`. Click **Run All** to execute every request in the file. Output is displayed in a dedicated output channel, and the optional webview panel is reused on each run instead of opening a new tab.
 
 ### IntelliSense
 
@@ -93,6 +93,16 @@ Real-time error detection for:
 | `hurl-toolkit.showResponseInWebview` | `false` | Show responses in a webview panel |
 | `hurl-toolkit.additionalArguments` | `""` | Extra arguments passed to hurl |
 | `hurl-toolkit.variablesFile` | `""` | Path to a `--variables-file` for hurl |
+| `hurl-toolkit.activeEnvironmentProfile` | `""` | Default named environment profile to use for runs |
+| `hurl-toolkit.environmentProfiles` | `{}` | Named profiles with `hurlPath`, `variablesFile`, `additionalArguments`, `variables`, and `environmentVariables` |
+
+## Environment Profiles
+
+Environment profiles let you keep local, staging, and production run settings separate while still using the same `.hurl` files.
+
+Each profile can override the Hurl executable, add `--variables-file`, append extra CLI arguments, define template variables with `--variable name=value`, and inject process environment variables such as `HURL_INSECURE` or `HURL_VERBOSE`.
+
+Use the status bar item labeled `Hurl: ...` or run `Hurl: Select Environment` to switch profiles. `Hurl: Clear Environment` falls back to the default global settings and inherited shell environment.
 
 ## About Hurl
 

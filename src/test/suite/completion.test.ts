@@ -14,19 +14,19 @@ async function getCompletions(
   );
 }
 
-function hasLabel(list: vscode.CompletionList, label: string): boolean {
-  return list.items.some((item) => {
-    if (typeof item.label === "string") {
+function hasLabel( list: vscode.CompletionList, label: string ): boolean {
+  return list.items.some( ( item ) => {
+    if ( typeof item.label === "string" ) {
       return item.label === label;
     }
-    return (item.label as vscode.CompletionItemLabel).label === label;
-  });
+    return ( item.label as vscode.CompletionItemLabel ).label === label;
+  } );
 }
 
-suite("Completion Provider", () => {
+suite( "Completion Provider", () => {
   let doc: vscode.TextDocument;
 
-  suiteSetup(async () => {
+  suiteSetup( async () => {
     // Create a temporary hurl file for completion testing
     const content = [
       "",                                    // line 0: empty, for method completions
@@ -44,111 +44,140 @@ suite("Completion Provider", () => {
       "[Captures]",                          // line 12: captures section
       "user_id: ",                           // line 13: capture query
       "{{",                                  // line 14: variable
-    ].join("\n");
+      "variable: api_host=example.org",      // line 15: options variable style
+      'variable "user_id" ',                 // line 16: variable query in asserts/captures
+    ].join( "\n" );
 
-    const uri = vscode.Uri.file(path.join(FIXTURES_PATH, "completion-test.hurl"));
+    const uri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-test.hurl" ) );
     const wsEdit = new vscode.WorkspaceEdit();
-    wsEdit.createFile(uri, { overwrite: true });
-    await vscode.workspace.applyEdit(wsEdit);
+    wsEdit.createFile( uri, { overwrite: true } );
+    await vscode.workspace.applyEdit( wsEdit );
 
     const wsEdit2 = new vscode.WorkspaceEdit();
-    wsEdit2.insert(uri, new vscode.Position(0, 0), content);
-    await vscode.workspace.applyEdit(wsEdit2);
+    wsEdit2.insert( uri, new vscode.Position( 0, 0 ), content );
+    await vscode.workspace.applyEdit( wsEdit2 );
 
-    doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc);
-    await sleep(2000);
-  });
+    doc = await vscode.workspace.openTextDocument( uri );
+    await vscode.window.showTextDocument( doc );
+    await sleep( 2000 );
+  } );
 
-  suiteTeardown(async () => {
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+  suiteTeardown( async () => {
+    await vscode.commands.executeCommand( "workbench.action.closeActiveEditor" );
     // Clean up the temp file
     try {
-      const uri = vscode.Uri.file(path.join(FIXTURES_PATH, "completion-test.hurl"));
-      await vscode.workspace.fs.delete(uri);
+      const uri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-test.hurl" ) );
+      await vscode.workspace.fs.delete( uri );
     } catch {
       // ignore
     }
-  });
+  } );
 
-  test("HTTP methods at empty line start", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(0, 0));
-    assert.ok(hasLabel(completions, "GET"), "Should suggest GET");
-    assert.ok(hasLabel(completions, "POST"), "Should suggest POST");
-    assert.ok(hasLabel(completions, "PUT"), "Should suggest PUT");
-    assert.ok(hasLabel(completions, "DELETE"), "Should suggest DELETE");
-    assert.ok(hasLabel(completions, "PATCH"), "Should suggest PATCH");
-    assert.ok(hasLabel(completions, "HEAD"), "Should suggest HEAD");
-    assert.ok(hasLabel(completions, "OPTIONS"), "Should suggest OPTIONS");
-  });
+  test( "HTTP methods at empty line start", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 0, 0 ) );
+    assert.ok( hasLabel( completions, "GET" ), "Should suggest GET" );
+    assert.ok( hasLabel( completions, "POST" ), "Should suggest POST" );
+    assert.ok( hasLabel( completions, "PUT" ), "Should suggest PUT" );
+    assert.ok( hasLabel( completions, "DELETE" ), "Should suggest DELETE" );
+    assert.ok( hasLabel( completions, "PATCH" ), "Should suggest PATCH" );
+    assert.ok( hasLabel( completions, "HEAD" ), "Should suggest HEAD" );
+    assert.ok( hasLabel( completions, "OPTIONS" ), "Should suggest OPTIONS" );
+  } );
 
-  test("Method completions include descriptions", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(0, 0));
-    const getItem = completions.items.find((item) => {
-      const label = typeof item.label === "string" ? item.label : (item.label as vscode.CompletionItemLabel).label;
+  test( "Method completions include descriptions", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 0, 0 ) );
+    const getItem = completions.items.find( ( item ) => {
+      const label = typeof item.label === "string" ? item.label : ( item.label as vscode.CompletionItemLabel ).label;
       return label === "GET";
-    });
-    assert.ok(getItem, "GET completion should exist");
-    assert.ok(getItem!.detail, "GET should have detail/description");
-  });
+    } );
+    assert.ok( getItem, "GET completion should exist" );
+    assert.ok( getItem!.detail, "GET should have detail/description" );
+  } );
 
-  test("Status codes after HTTP keyword", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(5, 5));
-    assert.ok(hasLabel(completions, "200"), "Should suggest 200");
-    assert.ok(hasLabel(completions, "201"), "Should suggest 201");
-    assert.ok(hasLabel(completions, "404"), "Should suggest 404");
-    assert.ok(hasLabel(completions, "500"), "Should suggest 500");
-  });
+  test( "Status codes after HTTP keyword", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 5, 5 ) );
+    assert.ok( hasLabel( completions, "200" ), "Should suggest 200" );
+    assert.ok( hasLabel( completions, "201" ), "Should suggest 201" );
+    assert.ok( hasLabel( completions, "404" ), "Should suggest 404" );
+    assert.ok( hasLabel( completions, "500" ), "Should suggest 500" );
+  } );
 
-  test("Status code completions include documentation", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(5, 5));
-    const item200 = completions.items.find((item) => {
-      const label = typeof item.label === "string" ? item.label : (item.label as vscode.CompletionItemLabel).label;
+  test( "Status code completions include documentation", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 5, 5 ) );
+    const item200 = completions.items.find( ( item ) => {
+      const label = typeof item.label === "string" ? item.label : ( item.label as vscode.CompletionItemLabel ).label;
       return label === "200";
-    });
-    assert.ok(item200, "200 completion should exist");
-    assert.ok(item200!.detail, "200 should have detail");
+    } );
+    assert.ok( item200, "200 completion should exist" );
+    assert.ok( item200!.detail, "200 should have detail" );
     assert.ok(
-      item200!.detail!.includes("OK") || item200!.detail!.includes("200"),
+      item200!.detail!.includes( "OK" ) || item200!.detail!.includes( "200" ),
       "200 detail should mention OK or 200"
     );
-  });
+  } );
 
-  test("Section names when typing [", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(6, 1));
-    assert.ok(hasLabel(completions, "[Asserts]"), "Should suggest [Asserts]");
-    assert.ok(hasLabel(completions, "[Captures]"), "Should suggest [Captures]");
-    assert.ok(hasLabel(completions, "[Options]"), "Should suggest [Options]");
-    assert.ok(hasLabel(completions, "[QueryStringParams]"), "Should suggest [QueryStringParams]");
-    assert.ok(hasLabel(completions, "[FormParams]"), "Should suggest [FormParams]");
-    assert.ok(hasLabel(completions, "[BasicAuth]"), "Should suggest [BasicAuth]");
-  });
+  test( "Section names when typing [", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 6, 1 ) );
+    assert.ok( hasLabel( completions, "[Asserts]" ), "Should suggest [Asserts]" );
+    assert.ok( hasLabel( completions, "[Captures]" ), "Should suggest [Captures]" );
+    assert.ok( hasLabel( completions, "[Options]" ), "Should suggest [Options]" );
+    assert.ok( hasLabel( completions, "[QueryStringParams]" ), "Should suggest [QueryStringParams]" );
+    assert.ok( hasLabel( completions, "[Query]" ), "Should suggest [Query] alias" );
+    assert.ok( hasLabel( completions, "[FormParams]" ), "Should suggest [FormParams]" );
+    assert.ok( hasLabel( completions, "[Form]" ), "Should suggest [Form] alias" );
+    assert.ok( hasLabel( completions, "[Multipart]" ), "Should suggest [Multipart] alias" );
+    assert.ok( hasLabel( completions, "[BasicAuth]" ), "Should suggest [BasicAuth]" );
+  } );
 
-  test("Section completions include documentation", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(6, 1));
-    const assertsItem = completions.items.find((item) => {
-      const label = typeof item.label === "string" ? item.label : (item.label as vscode.CompletionItemLabel).label;
+  test( "Section completions include documentation", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 6, 1 ) );
+    const assertsItem = completions.items.find( ( item ) => {
+      const label = typeof item.label === "string" ? item.label : ( item.label as vscode.CompletionItemLabel ).label;
       return label === "[Asserts]";
-    });
-    assert.ok(assertsItem, "[Asserts] completion should exist");
-    assert.ok(assertsItem!.documentation, "[Asserts] should have documentation");
-  });
+    } );
+    assert.ok( assertsItem, "[Asserts] completion should exist" );
+    assert.ok( assertsItem!.documentation, "[Asserts] should have documentation" );
+  } );
 
-  test("Assert predicates after jsonpath query", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(9, 20));
+  test( "Assert predicates after jsonpath query", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 9, 20 ) );
     // Check for common predicates
-    assert.ok(hasLabel(completions, "=="), "Should suggest ==");
-    assert.ok(hasLabel(completions, "!="), "Should suggest !=");
-    assert.ok(hasLabel(completions, "contains"), "Should suggest contains");
-    assert.ok(hasLabel(completions, "exists"), "Should suggest exists");
-    assert.ok(hasLabel(completions, "matches"), "Should suggest matches");
-  });
+    assert.ok( hasLabel( completions, "==" ), "Should suggest ==" );
+    assert.ok( hasLabel( completions, "!=" ), "Should suggest !=" );
+    assert.ok( hasLabel( completions, "contains" ), "Should suggest contains" );
+    assert.ok( hasLabel( completions, "exists" ), "Should suggest exists" );
+    assert.ok( hasLabel( completions, "matches" ), "Should suggest matches" );
+    assert.ok( hasLabel( completions, "count" ), "Should suggest count filter" );
+    assert.ok( hasLabel( completions, "split" ), "Should suggest split filter" );
+  } );
 
-  test("Options inside [Options] section", async () => {
-    const completions = await getCompletions(doc, new vscode.Position(11, 0));
-    assert.ok(hasLabel(completions, "retry"), "Should suggest retry");
-    assert.ok(hasLabel(completions, "delay"), "Should suggest delay");
-    assert.ok(hasLabel(completions, "location"), "Should suggest location");
-    assert.ok(hasLabel(completions, "verbose"), "Should suggest verbose");
-  });
-});
+  test( "Options inside [Options] section", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 11, 0 ) );
+    assert.ok( hasLabel( completions, "retry" ), "Should suggest retry" );
+    assert.ok( hasLabel( completions, "delay" ), "Should suggest delay" );
+    assert.ok( hasLabel( completions, "location" ), "Should suggest location" );
+    assert.ok( hasLabel( completions, "verbose" ), "Should suggest verbose" );
+    assert.ok( hasLabel( completions, "variable" ), "Should suggest variable option" );
+  } );
+
+  test( "Capture queries include advanced query kinds", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 13, 9 ) );
+    assert.ok( hasLabel( completions, "jsonpath" ), "Should suggest jsonpath" );
+    assert.ok( hasLabel( completions, "rawbytes" ), "Should suggest rawbytes" );
+    assert.ok( hasLabel( completions, "redirects" ), "Should suggest redirects" );
+    assert.ok( hasLabel( completions, "variable" ), "Should suggest variable query" );
+  } );
+
+  test( "Variable placeholders include captured and option variables", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 14, 2 ) );
+    assert.ok( hasLabel( completions, "user_id" ), "Should suggest captured variable" );
+    assert.ok( hasLabel( completions, "api_host" ), "Should suggest option variable" );
+  } );
+
+  test( "Variable placeholders include template functions", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 14, 2 ) );
+    assert.ok( hasLabel( completions, "newDate" ), "Should suggest newDate function" );
+    assert.ok( hasLabel( completions, "newUuid" ), "Should suggest newUuid function" );
+    assert.ok( hasLabel( completions, "getEnv" ), "Should suggest getEnv function" );
+  } );
+} );

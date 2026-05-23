@@ -31,7 +31,9 @@
     "request"
   ],
   "activationEvents": [
-    "onLanguage:hurl"
+    "onLanguage:hurl",
+    "onCommand:hurl-toolkit.selectEnvironment",
+    "onCommand:hurl-toolkit.clearEnvironment"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -78,6 +80,14 @@
       {
         "command": "hurl-toolkit.runFile",
         "title": "Hurl: Run Entire File"
+      },
+      {
+        "command": "hurl-toolkit.selectEnvironment",
+        "title": "Hurl: Select Environment"
+      },
+      {
+        "command": "hurl-toolkit.clearEnvironment",
+        "title": "Hurl: Clear Environment"
       }
     ],
     "configuration": {
@@ -102,6 +112,47 @@
           "type": "string",
           "default": "",
           "description": "Path to a variables file to use with --variables-file"
+        },
+        "hurl-toolkit.activeEnvironmentProfile": {
+          "type": "string",
+          "default": "",
+          "description": "Default named environment profile to use for Hurl runs"
+        },
+        "hurl-toolkit.environmentProfiles": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "hurlPath": {
+                "type": "string",
+                "default": ""
+              },
+              "variablesFile": {
+                "type": "string",
+                "default": ""
+              },
+              "additionalArguments": {
+                "type": "string",
+                "default": ""
+              },
+              "variables": {
+                "type": "object",
+                "default": {},
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "environmentVariables": {
+                "type": "object",
+                "default": {},
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": "Named environment profiles that can override Hurl paths, variables, and process environment"
         }
       }
     }

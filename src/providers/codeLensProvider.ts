@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import { parseHurlEntries } from "../utils/hurlParser";
+import { HurlEnvironmentManager } from "../utils/environmentManager";
+
+let responsePanel: vscode.WebviewPanel | undefined;
 
 export class HurlCodeLensProvider implements vscode.CodeLensProvider {
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
@@ -44,142 +47,121 @@ export class HurlCodeLensProvider implements vscode.CodeLensProvider {
 
 export function createRunEntryCommand(
   outputChannel: vscode.OutputChannel
+  , environmentManager: HurlEnvironmentManager
 ): ( uri: vscode.Uri, entryIndex: number ) => Promise<void> {
   return async ( uri: vscode.Uri, entryIndex: number ) => {
-    const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
-    const hurlPath = config.get<string>( "hurlPath", "hurl" );
-    const showWebview = config.get<boolean>( "showResponseInWebview", false );
-    const additionalArgs = config.get<string>( "additionalArguments", "" );
-    const variablesFile = config.get<string>( "variablesFile", "" );
-
-    const args: string[] = [ "--very-verbose", "--from-entry", String( entryIndex ), "--to-entry", String( entryIndex ) ];
-
-    if ( variablesFile ) {
-      args.push( "--variables-file", variablesFile );
-    }
-
-    if ( additionalArgs ) {
-      args.push( ...additionalArgs.split( /\s+/ ).filter( Boolean ) );
-    }
-
-    args.push( uri.fsPath );
-
-    outputChannel.clear();
-    outputChannel.show( true );
-    outputChannel.appendLine( `> ${hurlPath} ${args.join( " " )}` );
-    outputChannel.appendLine( "" );
-
-    try {
-      const { execFile } = await import( "node:child_process" );
-      const { promisify } = await import( "node:util" );
-      const execFileAsync = promisify( execFile );
-
-      const result = await execFileAsync( hurlPath, args, {
-        cwd: vscode.workspace.workspaceFolders?.[ 0 ]?.uri.fsPath,
-        timeout: 30000,
-        maxBuffer: 10 * 1024 * 1024,
-      } );
-
-      if ( result.stderr ) {
-        outputChannel.appendLine( result.stderr );
-      }
-      if ( result.stdout ) {
-        outputChannel.appendLine( result.stdout );
-      }
-
-      outputChannel.appendLine( "" );
-      outputChannel.appendLine( "--- Request completed successfully ---" );
-
-      if ( showWebview && result.stdout ) {
-        showResponseWebview( result.stdout, result.stderr );
-      }
-    } catch ( err: unknown ) {
-      const error = err as { stderr?: string; stdout?: string; message?: string };
-      if ( error.stderr ) {
-        outputChannel.appendLine( error.stderr );
-      }
-      if ( error.stdout ) {
-        outputChannel.appendLine( error.stdout );
-      }
-      if ( error.message && !error.stderr ) {
-        outputChannel.appendLine( `Error: ${error.message}` );
-      }
-      outputChannel.appendLine( "" );
-      outputChannel.appendLine( "--- Request failed ---" );
-    }
+    await runHurlCommand( outputChannel, environmentManager, uri, {
+      entryIndex,
+      includeRunRange: true,
+      webviewTitle: "Hurl Response",
+      webviewMode: "entry",
+    } );
   };
 }
 
 export function createRunFileCommand(
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  environmentManager: HurlEnvironmentManager
 ): ( uri: vscode.Uri ) => Promise<void> {
   return async ( uri: vscode.Uri ) => {
-    const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
-    const hurlPath = config.get<string>( "hurlPath", "hurl" );
-    const additionalArgs = config.get<string>( "additionalArguments", "" );
-    const variablesFile = config.get<string>( "variablesFile", "" );
-
-    const args: string[] = [ "--very-verbose" ];
-
-    if ( variablesFile ) {
-      args.push( "--variables-file", variablesFile );
-    }
-
-    if ( additionalArgs ) {
-      args.push( ...additionalArgs.split( /\s+/ ).filter( Boolean ) );
-    }
-
-    args.push( uri.fsPath );
-
-    outputChannel.clear();
-    outputChannel.show( true );
-    outputChannel.appendLine( `> ${hurlPath} ${args.join( " " )}` );
-    outputChannel.appendLine( "" );
-
-    try {
-      const { execFile } = await import( "node:child_process" );
-      const { promisify } = await import( "node:util" );
-      const execFileAsync = promisify( execFile );
-
-      const result = await execFileAsync( hurlPath, args, {
-        cwd: vscode.workspace.workspaceFolders?.[ 0 ]?.uri.fsPath,
-        timeout: 60000,
-        maxBuffer: 10 * 1024 * 1024,
-      } );
-
-      if ( result.stderr ) {
-        outputChannel.appendLine( result.stderr );
-      }
-      if ( result.stdout ) {
-        outputChannel.appendLine( result.stdout );
-      }
-
-      outputChannel.appendLine( "" );
-      outputChannel.appendLine( "--- All requests completed successfully ---" );
-    } catch ( err: unknown ) {
-      const error = err as { stderr?: string; stdout?: string; message?: string };
-      if ( error.stderr ) {
-        outputChannel.appendLine( error.stderr );
-      }
-      if ( error.stdout ) {
-        outputChannel.appendLine( error.stdout );
-      }
-      if ( error.message && !error.stderr ) {
-        outputChannel.appendLine( `Error: ${error.message}` );
-      }
-      outputChannel.appendLine( "" );
-      outputChannel.appendLine( "--- Execution failed ---" );
-    }
+    await runHurlCommand( outputChannel, environmentManager, uri, {
+      includeRunRange: false,
+      webviewTitle: "Hurl Results",
+      webviewMode: "file",
+    } );
   };
 }
 
-function showResponseWebview( stdout: string, stderr: string ): void {
-  const panel = vscode.window.createWebviewPanel(
-    "hurlResponse",
-    "Hurl Response",
-    vscode.ViewColumn.Beside,
-    { enableScripts: false }
-  );
+type RunMode = "entry" | "file";
+
+interface RunCommandOptions {
+  entryIndex?: number;
+  includeRunRange: boolean;
+  webviewTitle: string;
+  webviewMode: RunMode;
+}
+
+async function runHurlCommand(
+  outputChannel: vscode.OutputChannel,
+  environmentManager: HurlEnvironmentManager,
+  uri: vscode.Uri,
+  options: RunCommandOptions
+): Promise<void> {
+  const config = environmentManager.resolveRunSettings();
+  const showWebview = vscode.workspace.getConfiguration( "hurl-toolkit" ).get<boolean>( "showResponseInWebview", false );
+  const args: string[] = [ "--very-verbose" ];
+
+  if ( options.includeRunRange && options.entryIndex !== undefined ) {
+    args.push( "--from-entry", String( options.entryIndex ), "--to-entry", String( options.entryIndex ) );
+  }
+
+  args.push( ...config.args, uri.fsPath );
+
+  outputChannel.clear();
+  outputChannel.show( true );
+  outputChannel.appendLine( `[Environment: ${config.activeEnvironmentLabel}]` );
+  outputChannel.appendLine( `> ${config.hurlPath} ${args.join( " " )}` );
+  outputChannel.appendLine( "" );
+
+  try {
+    const { execFile } = await import( "node:child_process" );
+    const { promisify } = await import( "node:util" );
+    const execFileAsync = promisify( execFile );
+
+    const result = await execFileAsync( config.hurlPath, args, {
+      cwd: vscode.workspace.workspaceFolders?.[ 0 ]?.uri.fsPath,
+      timeout: 30000,
+      maxBuffer: 10 * 1024 * 1024,
+      env: config.env,
+    } );
+
+    if ( result.stderr ) {
+      outputChannel.appendLine( result.stderr );
+    }
+    if ( result.stdout ) {
+      outputChannel.appendLine( result.stdout );
+    }
+
+    outputChannel.appendLine( "" );
+    outputChannel.appendLine( "--- Request completed successfully ---" );
+
+    if ( showWebview && ( result.stdout || result.stderr ) ) {
+      showResponseWebview( options.webviewTitle, options.webviewMode, result.stdout, result.stderr );
+    }
+  } catch ( err: unknown ) {
+    const error = err as { stderr?: string; stdout?: string; message?: string };
+    if ( error.stderr ) {
+      outputChannel.appendLine( error.stderr );
+    }
+    if ( error.stdout ) {
+      outputChannel.appendLine( error.stdout );
+    }
+    if ( error.message && !error.stderr ) {
+      outputChannel.appendLine( `Error: ${error.message}` );
+    }
+    outputChannel.appendLine( "" );
+    outputChannel.appendLine( options.includeRunRange ? "--- Request failed ---" : "--- Execution failed ---" );
+  }
+}
+
+function showResponseWebview( title: string, mode: RunMode, stdout: string, stderr: string ): void {
+  if ( responsePanel ) {
+    responsePanel.title = title;
+    responsePanel.reveal( vscode.ViewColumn.Beside );
+  } else {
+    responsePanel = vscode.window.createWebviewPanel(
+      "hurlResponse",
+      title,
+      vscode.ViewColumn.Beside,
+      { enableScripts: false }
+    );
+
+    responsePanel.onDidDispose( () => {
+      responsePanel = undefined;
+    } );
+  }
+
+  const panel = responsePanel;
 
   // Try to parse response body from verbose output
   const bodyMatch = new RegExp( /\n\n([\s\S]*?)$/ ).exec( stderr );
@@ -201,6 +183,10 @@ function showResponseWebview( stdout: string, stderr: string ): void {
     .map( ( l ) => escapeHtml( l.substring( 2 ) ) )
     .join( "\n" );
 
+  const rawOutputSection = mode === "file" && ( stdout || stderr )
+    ? `<div class="section"><div class="label">Raw Output</div><pre><code>${escapeHtml( [ stderr, stdout ].filter( Boolean ).join( "\n" ) )}</code></pre></div>`
+    : "";
+
   panel.webview.html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -215,7 +201,8 @@ function showResponseWebview( stdout: string, stderr: string ): void {
   </style>
 </head>
 <body>
-  <h2>Hurl Response</h2>
+  <h2>${escapeHtml( title )}</h2>
+  ${rawOutputSection}
   ${headerLines ? `<div class="section"><div class="label">Response Headers</div><pre><code>${headerLines}</code></pre></div>` : ""}
   <div class="section"><div class="label">Response Body</div>${formattedBody}</div>
 </body>

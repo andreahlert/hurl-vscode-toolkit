@@ -7,11 +7,34 @@ import {
   createRunEntryCommand,
   createRunFileCommand,
 } from "./providers/codeLensProvider";
+import { HurlEnvironmentManager } from "./utils/environmentManager";
 
-const HURL_SELECTOR: vscode.DocumentSelector = { language: "hurl", scheme: "file" };
+const HURL_SELECTOR: vscode.DocumentSelector = [
+  { language: "hurl", scheme: "file" },
+  { language: "hurl", scheme: "vscode-notebook-cell" },
+];
 
 export function activate( context: vscode.ExtensionContext ): void {
   const outputChannel = vscode.window.createOutputChannel( "Hurl Toolkit" );
+  const environmentManager = new HurlEnvironmentManager( context );
+  const environmentStatusBarItem = vscode.window.createStatusBarItem( vscode.StatusBarAlignment.Left, 100 );
+
+  const updateEnvironmentStatusBar = () => {
+    environmentStatusBarItem.text = `Hurl: ${environmentManager.getActiveEnvironmentLabel()}`;
+    environmentStatusBarItem.tooltip = "Select the active Hurl environment profile";
+    environmentStatusBarItem.command = "hurl-toolkit.selectEnvironment";
+    environmentStatusBarItem.show();
+  };
+
+  updateEnvironmentStatusBar();
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration( ( event ) => {
+      if ( event.affectsConfiguration( "hurl-toolkit" ) ) {
+        updateEnvironmentStatusBar();
+      }
+    } )
+  );
 
   // Completion provider
   context.subscriptions.push(
@@ -58,14 +81,32 @@ export function activate( context: vscode.ExtensionContext ): void {
     ,
     vscode.commands.registerCommand(
       "hurl-toolkit.runEntry",
-      createRunEntryCommand( outputChannel )
+      createRunEntryCommand( outputChannel, environmentManager )
     )
     ,
     vscode.commands.registerCommand(
       "hurl-toolkit.runFile",
-      createRunFileCommand( outputChannel )
+      createRunFileCommand( outputChannel, environmentManager )
+    )
+    ,
+    vscode.commands.registerCommand(
+      "hurl-toolkit.selectEnvironment",
+      async () => {
+        await environmentManager.selectEnvironment();
+        updateEnvironmentStatusBar();
+      }
+    )
+    ,
+    vscode.commands.registerCommand(
+      "hurl-toolkit.clearEnvironment",
+      async () => {
+        await environmentManager.clearEnvironment();
+        updateEnvironmentStatusBar();
+      }
     )
     , outputChannel );
+
+  context.subscriptions.push( environmentStatusBarItem );
 }
 
 export function deactivate(): void {
