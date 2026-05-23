@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { parseHurlEntries } from "../utils/hurlParser";
 
 export class HurlCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
   provideCodeLenses(
@@ -70,8 +70,8 @@ export function createRunEntryCommand(
     outputChannel.appendLine( "" );
 
     try {
-      const { execFile } = await import( "child_process" );
-      const { promisify } = await import( "util" );
+      const { execFile } = await import( "node:child_process" );
+      const { promisify } = await import( "node:util" );
       const execFileAsync = promisify( execFile );
 
       const result = await execFileAsync( hurlPath, args, {
@@ -137,8 +137,8 @@ export function createRunFileCommand(
     outputChannel.appendLine( "" );
 
     try {
-      const { execFile } = await import( "child_process" );
-      const { promisify } = await import( "util" );
+      const { execFile } = await import( "node:child_process" );
+      const { promisify } = await import( "node:util" );
       const execFileAsync = promisify( execFile );
 
       const result = await execFileAsync( hurlPath, args, {
@@ -182,7 +182,7 @@ function showResponseWebview( stdout: string, stderr: string ): void {
   );
 
   // Try to parse response body from verbose output
-  const bodyMatch = stderr.match( /\n\n([\s\S]*?)$/ );
+  const bodyMatch = new RegExp( /\n\n([\s\S]*?)$/ ).exec( stderr );
   const responseBody = bodyMatch ? bodyMatch[ 1 ] : stdout;
 
   // Try to detect if it's JSON
@@ -224,8 +224,8 @@ function showResponseWebview( stdout: string, stderr: string ): void {
 
 function escapeHtml( str: string ): string {
   return str
-    .replace( /&/g, "&amp;" )
-    .replace( /</g, "&lt;" )
-    .replace( />/g, "&gt;" )
-    .replace( /"/g, "&quot;" );
+    .replaceAll( '&', "&amp;" )
+    .replaceAll( '<', "&lt;" )
+    .replaceAll( '>', "&gt;" )
+    .replaceAll( '"', "&quot;" );
 }

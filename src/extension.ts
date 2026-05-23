@@ -23,10 +23,7 @@ export function activate( context: vscode.ExtensionContext ): void {
       ":", // trigger for header values
       " "  // trigger after method, etc.
     )
-  );
-
-  // Hover provider
-  context.subscriptions.push(
+    ,
     vscode.languages.registerHoverProvider( HURL_SELECTOR, new HurlHoverProvider() )
   );
 
@@ -46,43 +43,29 @@ export function activate( context: vscode.ExtensionContext ): void {
         diagnosticProvider.updateDiagnostics( doc );
       }
     } )
-  );
-
-  context.subscriptions.push(
+    ,
     vscode.workspace.onDidChangeTextDocument( ( event ) => {
       if ( event.document.languageId === "hurl" ) {
         diagnosticProvider.updateDiagnostics( event.document );
       }
     } )
-  );
-
-  context.subscriptions.push(
+    ,
     vscode.workspace.onDidCloseTextDocument( ( doc ) => {
       diagnosticCollection.delete( doc.uri );
     } )
-  );
-
-  // CodeLens provider
-  context.subscriptions.push(
+    ,
     vscode.languages.registerCodeLensProvider( HURL_SELECTOR, new HurlCodeLensProvider() )
-  );
-
-  // Run commands
-  context.subscriptions.push(
+    ,
     vscode.commands.registerCommand(
       "hurl-toolkit.runEntry",
       createRunEntryCommand( outputChannel )
     )
-  );
-
-  context.subscriptions.push(
+    ,
     vscode.commands.registerCommand(
       "hurl-toolkit.runFile",
       createRunFileCommand( outputChannel )
     )
-  );
-
-  context.subscriptions.push( outputChannel );
+    , outputChannel );
 }
 
 export function deactivate(): void {
