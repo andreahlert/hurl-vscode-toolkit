@@ -1,6 +1,6 @@
-import * as assert from "assert";
+import * as assert from "node:assert";
 import * as vscode from "vscode";
-import * as path from "path";
+import * as path from "node:path";
 import { sleep, FIXTURES_PATH } from "./helpers";
 
 async function getCompletions(
@@ -25,6 +25,7 @@ function hasLabel( list: vscode.CompletionList, label: string ): boolean {
 
 suite( "Completion Provider", () => {
   let doc: vscode.TextDocument;
+  const schemaUri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-schema.graphqls" ) );
 
   suiteSetup( async () => {
     // Create a temporary hurl file for completion testing
@@ -46,6 +47,14 @@ suite( "Completion Provider", () => {
       "{{",                                  // line 14: variable
       "variable: api_host=example.org",      // line 15: options variable style
       'variable "user_id" ',                 // line 16: variable query in asserts/captures
+      "",                                    // line 17
+      "```graphql",                         // line 18: GraphQL fenced block
+      "query GetUser {",                    // line 19
+      "  user {",                           // line 20
+      "    ",                               // line 21: GraphQL completions
+      "  }",                                // line 22
+      "}",                                  // line 23
+      "```",                                // line 24
     ].join( "\n" );
 
     const uri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-test.hurl" ) );
@@ -56,6 +65,30 @@ suite( "Completion Provider", () => {
     const wsEdit2 = new vscode.WorkspaceEdit();
     wsEdit2.insert( uri, new vscode.Position( 0, 0 ), content );
     await vscode.workspace.applyEdit( wsEdit2 );
+
+    const schemaContent = [
+      "type Query {",
+      "  user: User",
+      "}",
+      "",
+      "type User {",
+      "  id: ID!",
+      "  email: String!",
+      "}",
+      "",
+      "enum Role {",
+      "  ADMIN",
+      "  USER",
+      "}",
+    ].join( "\n" );
+
+    const schemaEdit = new vscode.WorkspaceEdit();
+    schemaEdit.createFile( schemaUri, { overwrite: true } );
+    await vscode.workspace.applyEdit( schemaEdit );
+
+    const schemaEdit2 = new vscode.WorkspaceEdit();
+    schemaEdit2.insert( schemaUri, new vscode.Position( 0, 0 ), schemaContent );
+    await vscode.workspace.applyEdit( schemaEdit2 );
 
     doc = await vscode.workspace.openTextDocument( uri );
     await vscode.window.showTextDocument( doc );
@@ -68,6 +101,11 @@ suite( "Completion Provider", () => {
     try {
       const uri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-test.hurl" ) );
       await vscode.workspace.fs.delete( uri );
+    } catch {
+      // ignore
+    }
+    try {
+      await vscode.workspace.fs.delete( schemaUri );
     } catch {
       // ignore
     }
@@ -179,5 +217,13 @@ suite( "Completion Provider", () => {
     assert.ok( hasLabel( completions, "newDate" ), "Should suggest newDate function" );
     assert.ok( hasLabel( completions, "newUuid" ), "Should suggest newUuid function" );
     assert.ok( hasLabel( completions, "getEnv" ), "Should suggest getEnv function" );
+  } );
+
+  test( "GraphQL fenced blocks include schema symbols from .graphqls files", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 21, 4 ) );
+    assert.ok( hasLabel( completions, "Query" ), "Should suggest GraphQL type definitions" );
+    assert.ok( hasLabel( completions, "User" ), "Should suggest GraphQL type definitions from .graphqls" );
+    assert.ok( hasLabel( completions, "id" ), "Should suggest GraphQL fields from .graphqls" );
+    assert.ok( hasLabel( completions, "ADMIN" ), "Should suggest GraphQL enum values from .graphqls" );
   } );
 } );

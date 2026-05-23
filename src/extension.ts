@@ -34,10 +34,7 @@ export function activate( context: vscode.ExtensionContext ): void {
         updateEnvironmentStatusBar();
       }
     } )
-  );
-
-  // Completion provider
-  context.subscriptions.push(
+    ,
     vscode.languages.registerCompletionItemProvider(
       HURL_SELECTOR,
       new HurlCompletionProvider(),
@@ -104,9 +101,7 @@ export function activate( context: vscode.ExtensionContext ): void {
         updateEnvironmentStatusBar();
       }
     )
-    , outputChannel );
-
-  context.subscriptions.push( environmentStatusBarItem );
+    , outputChannel, environmentStatusBarItem );
 }
 
 export function deactivate(): void {

@@ -175,5 +175,9 @@
     "mocha": "^11.7.5",
     "puppeteer": "^24.40.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@vscode/vsce": "^3.9.1",
+    "global": "^4.4.0"
   }
 }

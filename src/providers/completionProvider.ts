@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { HTTP_METHODS } from "../data/methods";
 import { COMMON_HEADERS } from "../data/headers";
 import { STATUS_CODES } from "../data/statusCodes";
@@ -13,6 +13,13 @@ interface QueryCompletion {
     name: string;
     detail: string;
     snippet: string;
+}
+
+interface GraphQLSchemaSymbol {
+    name: string;
+    detail: string;
+    sortText: string;
+    kind: vscode.CompletionItemKind;
 }
 
 const VARIABLE_NAME_REGEX = /^[A-Za-z][A-Za-z0-9_-]*$/;
@@ -87,12 +94,12 @@ const CERTIFICATE_FIELDS = [
 ];
 
 export class HurlCompletionProvider implements vscode.CompletionItemProvider {
-    provideCompletionItems(
+    async provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
         _token: vscode.CancellationToken,
         _context: vscode.CompletionContext
-    ): vscode.CompletionItem[] {
+    ): Promise<vscode.CompletionItem[]> {
         const ctx = getContextAtPosition( document, position );
         const lineText = ctx.lineText;
         const textBeforeCursor = lineText.substring( 0, position.character );
@@ -100,7 +107,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
 
         // GraphQL fenced block completions
         if ( this.isInsideFencedBlock( document, position, "graphql" ) ) {
-            items.push( ...this.getGraphQLCompletions() );
+            items.push( ...await this.getGraphQLCompletions() );
             return items;
         }
 
@@ -327,7 +334,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
         } );
     }
 
-    private getGraphQLCompletions(): vscode.CompletionItem[] {
+    private async getGraphQLCompletions(): Promise<vscode.CompletionItem[]> {
         const keywords = [ "query", "mutation", "subscription", "fragment", "on", "schema" ];
         const items = keywords.map( ( k ) => {
             const it = new vscode.CompletionItem( k, vscode.CompletionItemKind.Keyword );
@@ -341,7 +348,109 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
         snippet.detail = "Insert GraphQL query skeleton";
         items.unshift( snippet );
 
+        items.push( ...await this.getGraphQLSchemaCompletions() );
+
         return items;
+    }
+
+    private async getGraphQLSchemaCompletions(): Promise<vscode.CompletionItem[]> {
+        const files = await vscode.workspace.findFiles( "**/*.graphqls", "**/node_modules/**" );
+        const definitions = new Map<string, GraphQLSchemaSymbol>();
+
+        for ( const file of files ) {
+            try {
+                const bytes = await vscode.workspace.fs.readFile( file );
+                const text = new TextDecoder().decode( bytes );
+                for ( const symbol of this.extractGraphQLSchemaSymbols( text, path.basename( file.fsPath ) ) ) {
+                    if ( !definitions.has( symbol.name ) ) {
+                        definitions.set( symbol.name, symbol );
+                    }
+                }
+            } catch {
+                continue;
+            }
+        }
+
+        return Array.from( definitions.values() )
+            .sort( ( a, b ) => a.sortText.localeCompare( b.sortText ) || a.name.localeCompare( b.name ) )
+            .map( ( symbol ) => {
+                const item = new vscode.CompletionItem( symbol.name, symbol.kind );
+                item.detail = symbol.detail;
+                item.insertText = symbol.name;
+                item.sortText = symbol.sortText;
+                return item;
+            } );
+    }
+
+    private extractGraphQLSchemaSymbols( text: string, sourceName: string ): GraphQLSchemaSymbol[] {
+        const symbols: GraphQLSchemaSymbol[] = [];
+        const seen = new Set<string>();
+        const addSymbol = ( name: string, detail: string, sortPrefix: string, kind: vscode.CompletionItemKind ) => {
+            if ( seen.has( name ) ) {
+                return;
+            }
+
+            seen.add( name );
+            symbols.push( {
+                name,
+                detail,
+                sortText: `${sortPrefix}-${name}`,
+                kind,
+            } );
+        };
+
+        let currentBlock: "type" | "interface" | "input" | "enum" | undefined;
+
+        for ( const rawLine of text.split( /\r?\n/ ) ) {
+            const line = rawLine.trim();
+            if ( line === "" || line.startsWith( "#" ) ) {
+                continue;
+            }
+
+            if ( currentBlock ) {
+                if ( line.startsWith( "}" ) ) {
+                    currentBlock = undefined;
+                    continue;
+                }
+
+                if ( currentBlock === "enum" ) {
+                    const enumValueMatch = line.match( /^([_A-Za-z][_0-9A-Za-z]*)\b/ );
+                    if ( enumValueMatch ) {
+                        addSymbol( enumValueMatch[ 1 ], `GraphQL enum value from ${sourceName}`, "3", vscode.CompletionItemKind.EnumMember );
+                    }
+                    continue;
+                }
+
+                const fieldMatch = line.match( /^([_A-Za-z][_0-9A-Za-z]*)\s*(\([^)]*\))?\s*:\s*/ );
+                if ( fieldMatch ) {
+                    addSymbol( fieldMatch[ 1 ], `GraphQL field from ${sourceName}`, "2", vscode.CompletionItemKind.Field );
+                }
+                continue;
+            }
+
+            const definitionMatch = line.match( /^(type|interface|input|enum|scalar|union)\s+([_A-Za-z][_0-9A-Za-z]*)\b/ );
+            if ( definitionMatch ) {
+                const definitionKind = definitionMatch[ 1 ];
+                const definitionName = definitionMatch[ 2 ];
+                const detail = `GraphQL ${definitionKind} from ${sourceName}`;
+
+                if ( definitionKind === "type" || definitionKind === "interface" || definitionKind === "input" ) {
+                    addSymbol( definitionName, detail, "0", vscode.CompletionItemKind.Class );
+                    currentBlock = definitionKind;
+                    continue;
+                }
+
+                if ( definitionKind === "enum" ) {
+                    addSymbol( definitionName, detail, "0", vscode.CompletionItemKind.Enum );
+                    currentBlock = "enum";
+                    continue;
+                }
+
+                addSymbol( definitionName, detail, "1", vscode.CompletionItemKind.Interface );
+            }
+        }
+
+        return symbols;
     }
 
     private isInsideFencedBlock( document: vscode.TextDocument, position: vscode.Position, lang: string ): boolean {
