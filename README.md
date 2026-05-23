@@ -71,15 +71,15 @@ Real-time error detection for:
 
 | Prefix | Description |
 |---|---|
-| `hurl-get` | GET request with assertions |
-| `hurl-post-json` | POST with JSON body |
-| `hurl-post-form` | POST with form parameters |
-| `hurl-auth` | Request with Bearer authentication |
+| `hurl-get` | Basic request with asserts |
+| `hurl-post-json` | POST JSON request with capture |
+| `hurl-post-form` | POST form request |
+| `hurl-vars` | Request with scoped variables |
+| `hurl-capture` | Capture and reuse a response value |
+| `hurl-redirect` | Redirect flow with assertions |
+| `hurl-upload` | Multipart upload |
 | `hurl-graphql` | GraphQL request |
-| `hurl-upload` | Multipart file upload |
-| `hurl-capture` | Request with response captures |
-| `hurl-chain` | Chained requests (create, read, delete) |
-| `hurl-full` | Complete CRUD test template |
+| `hurl-full` | Full CRUD flow |
 
 ## Requirements
 
@@ -102,7 +102,7 @@ Environment profiles let you keep local, staging, and production run settings se
 
 Each profile can override the Hurl executable, add `--variables-file`, append extra CLI arguments, define template variables with `--variable name=value`, and inject process environment variables such as `HURL_INSECURE` or `HURL_VERBOSE`.
 
-Use the status bar item labeled `Hurl: ...` or run `Hurl: Select Environment` to switch profiles. `Hurl: Clear Environment` falls back to the default global settings and inherited shell environment.
+Use the status bar item labeled `Hurl: ...` or run `Hurl: Select Environment` to switch profiles. `Hurl: Clear Environment` falls back to the default global settings and inherited shell environment. You can also set `hurl-toolkit.activeEnvironmentProfile` to choose the default profile when Hurl runs.
 
 ## About Hurl
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Environment profiles for switching Hurl executable paths, variables files, CLI arguments, template variables, and process environment variables per run
+- Commands and status bar actions for selecting and clearing the active environment profile
+- Updated built-in snippets to cover scoped variables, redirect flows, multipart uploads, and revised request templates
+
 ## 0.1.0 (2026-03-20)
 
 ### Added
