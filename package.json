@@ -92,6 +92,14 @@
       {
         "command": "hurl-toolkit.fetchGraphQLSchema",
         "title": "Hurl: Fetch GraphQL Schema"
+      },
+      {
+        "command": "hurl-toolkit.addAuthToken",
+        "title": "Hurl: Add Auth Token"
+      },
+      {
+        "command": "hurl-toolkit.manageVariables",
+        "title": "Hurl: Manage Variables"
       }
     ],
     "keybindings": [

@@ -126,6 +126,35 @@ export class HurlEnvironmentManager {
         };
     }
 
+    async saveVariableToProfile( profileName: string, variableName: string, value: string ): Promise<void> {
+        const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
+        const profiles = config.get<Record<string, HurlEnvironmentProfile>>( "environmentProfiles" ) ?? {};
+        const profile = profiles[ profileName ] ?? {};
+        profile.variables = { ...( profile.variables ?? {} ), [ variableName ]: value };
+        profiles[ profileName ] = profile;
+        const target = vscode.workspace.workspaceFolders?.length
+            ? vscode.ConfigurationTarget.Workspace
+            : vscode.ConfigurationTarget.Global;
+        await config.update( "environmentProfiles", profiles, target );
+    }
+
+    async removeVariableFromProfile( profileName: string, variableName: string ): Promise<void> {
+        const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
+        const profiles = config.get<Record<string, HurlEnvironmentProfile>>( "environmentProfiles" ) ?? {};
+        const profile = profiles[ profileName ];
+        if ( profile?.variables ) {
+            delete profile.variables[ variableName ];
+            const target = vscode.workspace.workspaceFolders?.length
+                ? vscode.ConfigurationTarget.Workspace
+                : vscode.ConfigurationTarget.Global;
+            await config.update( "environmentProfiles", profiles, target );
+        }
+    }
+
+    async setActiveEnvironment( profileName: string ): Promise<void> {
+        await this.context.workspaceState.update( ACTIVE_ENVIRONMENT_KEY, profileName || undefined );
+    }
+
     private describeProfile( profile: HurlEnvironmentProfile | undefined ): string {
         if ( !profile ) {
             return "";

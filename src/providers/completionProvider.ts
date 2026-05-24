@@ -126,7 +126,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         if ( ctx.context === "request-header" && this.isHeaderCompletionTrigger( textBeforeCursor ) ) {
-            items.push( ...this.getHeaderCompletions() );
+            items.push( ...this.getHeaderCompletions( position, textBeforeCursor ) );
         }
 
         const headerValueMatch = /^\s*([\w-]+)\s*:\s*(.*)$/.exec( textBeforeCursor );
@@ -221,7 +221,13 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
         } );
     }
 
-    private getHeaderCompletions(): vscode.CompletionItem[] {
+    private getHeaderCompletions( position: vscode.Position, textBeforeCursor: string ): vscode.CompletionItem[] {
+        const leadingSpaces = textBeforeCursor.length - textBeforeCursor.trimStart().length;
+        const endsWithColon = textBeforeCursor.trimEnd().endsWith( ":" );
+
+        const prefixMatch = endsWithColon ? /^\s*([\w-]+):/.exec( textBeforeCursor ) : null;
+        const typedBeforeColon = prefixMatch ? prefixMatch[ 1 ].toLowerCase() : "";
+
         return COMMON_HEADERS.map( ( header ) => {
             const item = new vscode.CompletionItem( header.name, vscode.CompletionItemKind.Field );
             item.detail = header.description;
@@ -230,6 +236,29 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
             } else {
                 item.insertText = new vscode.SnippetString( `${header.name}: \${1}\${0}` );
             }
+
+            if ( endsWithColon ) {
+                // Empty range at cursor: filter input starts fresh after ':', so typing works normally
+                item.range = new vscode.Range( position, position );
+                // Delete the typed prefix (name + colon) when a completion is accepted
+                item.additionalTextEdits = [
+                    vscode.TextEdit.delete( new vscode.Range(
+                        new vscode.Position( position.line, leadingSpaces ),
+                        position
+                    ) )
+                ];
+                // Sort headers matching the typed prefix to the top
+                const lowerName = header.name.toLowerCase();
+                item.sortText = ( typedBeforeColon && lowerName.startsWith( typedBeforeColon ) )
+                    ? `0-${header.name}` : `1-${header.name}`;
+            } else {
+                // Normal typing: range covers typed prefix so it gets replaced on acceptance
+                item.range = new vscode.Range(
+                    new vscode.Position( position.line, leadingSpaces ),
+                    position
+                );
+            }
+
             return item;
         } );
     }
