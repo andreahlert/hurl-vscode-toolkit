@@ -115,6 +115,10 @@
         "command": "hurl-toolkit.openAsNotebook",
         "title": "Hurl: Open as Notebook",
         "icon": "$(notebook)"
+      },
+      {
+        "command": "hurl-toolkit.openSettings",
+        "title": "Hurl: Open Extension Settings"
       }
     ],
     "menus": {

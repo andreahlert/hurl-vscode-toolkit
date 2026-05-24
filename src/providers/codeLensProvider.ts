@@ -328,10 +328,7 @@ function parseResponseOutput( stdout: string, stderr: string ): ParsedResponseOu
   }
 
   if ( !body ) {
-    const bodyMatch = /\n\n([\s\S]*?)$/m.exec( stderr );
-    if ( bodyMatch ) {
-      body = bodyMatch[ 1 ].trim();
-    }
+    body = extractBodyFromVerboseStderr( stderrLines ) ?? "";
   }
 
   return {
@@ -342,33 +339,82 @@ function parseResponseOutput( stdout: string, stderr: string ): ParsedResponseOu
   };
 }
 
+/**
+ * Extract the response body from hurl --very-verbose stderr.
+ * Hurl emits:
+ *   * Response body:
+ *   * {line of body}
+ *   *
+ */
+function extractBodyFromVerboseStderr( stderrLines: string[] ): string | undefined {
+  let bodyStartIdx = -1;
+
+  for ( let i = 0; i < stderrLines.length; i++ ) {
+    if ( /^\*\s+Response body:\s*$/.test( stderrLines[ i ] ) ) {
+      bodyStartIdx = i + 1; // always update → picks up the last response
+    }
+  }
+
+  if ( bodyStartIdx === -1 ) return undefined;
+
+  const bodyLines: string[] = [];
+  for ( let i = bodyStartIdx; i < stderrLines.length; i++ ) {
+    const m = /^\*\s(.+)$/.exec( stderrLines[ i ] );
+    if ( m ) {
+      bodyLines.push( m[ 1 ] );
+    } else {
+      break;
+    }
+  }
+
+  const body = bodyLines.join( "\n" ).trim();
+  return body || undefined;
+}
+
+/**
+ * Extract all error blocks from hurl stderr, each starting with "error:" and
+ * including the full source-location context (-->, | lines, ^^^ underline).
+ */
+function extractErrorBlocks( stderrLines: string[] ): string | undefined {
+  const blocks: string[] = [];
+  let i = 0;
+
+  while ( i < stderrLines.length ) {
+    const line = stderrLines[ i ];
+    if ( line.startsWith( "error:" ) ) {
+      const blockLines: string[] = [ line ];
+      i++;
+      while ( i < stderrLines.length ) {
+        const bl = stderrLines[ i ];
+        if ( /^\s*(-->|\d*\s*\|)/.test( bl ) ) {
+          blockLines.push( bl );
+          i++;
+        } else {
+          break;
+        }
+      }
+      blocks.push( blockLines.join( "\n" ).trimEnd() );
+      continue;
+    }
+    i++;
+  }
+
+  return blocks.length > 0 ? blocks.join( "\n\n" ).trim() : undefined;
+}
+
 function buildErrorMarkup( stderr: string, errorMessage?: string ): string {
-  // If there's an explicit error message (from the thrown error), show it
   if ( errorMessage ) {
     return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( errorMessage )}</code></pre></div>`;
   }
 
   if ( !stderr ) return "";
 
-  const lines = stderr.split( /\r?\n/ );
-  // Primary indicator: arrow-style pointer commonly used in parse errors
-  const arrowIdx = lines.findIndex( ( l ) => /^\s*-->/.test( l ) );
-  if ( arrowIdx !== -1 ) {
-    const start = Math.max( 0, arrowIdx - 1 );
-    const end = Math.min( lines.length, arrowIdx + 4 );
-    const snippet = lines.slice( start, end ).join( "\n" ).trim();
+  const stderrLines = stderr.split( /\r?\n/ );
+  const snippet = extractErrorBlocks( stderrLines );
+  if ( snippet ) {
     return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
   }
 
-  // Secondary indicators: stderr contains explicit error keywords
-  const errorKeywordRe = /\b(error|failed|exception|panic|unclosed|invalid|fatal)\b/i;
-  if ( errorKeywordRe.test( stderr ) ) {
-    const trimmed = stderr.trim();
-    const snippet = trimmed.split( /\r?\n/ ).slice( 0, 8 ).join( "\n" );
-    return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
-  }
-
-  // Otherwise treat stderr as informational (don't surface as failure)
   return "";
 }
 

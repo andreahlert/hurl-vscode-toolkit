@@ -189,6 +189,13 @@ export function activate( context: vscode.ExtensionContext ): void {
     )
     ,
     vscode.commands.registerCommand(
+      "hurl-toolkit.openSettings",
+      () => {
+        void vscode.commands.executeCommand( "workbench.action.openSettings", "hurl-toolkit" );
+      }
+    )
+    ,
+    vscode.commands.registerCommand(
       "hurl-toolkit.fetchGraphQLSchema",
       async () => {
         const editor = vscode.window.activeTextEditor;

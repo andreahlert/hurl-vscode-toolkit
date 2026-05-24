@@ -201,10 +201,11 @@ function buildMarkdownOutput(
 
 /**
  * Parse variables captured by a [Captures] section from hurl --very-verbose stderr.
- * Hurl emits a block like:
+ * Hurl emits lines like:
  *   * Captures
- *       token: abc123
- *       user_id: 42
+ *   * token: abc123
+ *   * user_id: 42
+ *   *
  */
 function parseCapturedVariables( stderrLines: string[] ): Record<string, string> {
   const captures: Record<string, string> = {};
@@ -219,13 +220,13 @@ function parseCapturedVariables( stderrLines: string[] ): Record<string, string>
 
     if ( !inCaptures ) continue;
 
-    // Capture entry: "*   name: value"
-    const match = /^\*\s{2,}([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.+)$/.exec( line );
+    // Capture entry: "* name: value" (one or more spaces after *)
+    const match = /^\*\s+([A-Za-z]\w*)\s*:\s*(.+)$/.exec( line );
     if ( match ) {
       // Strip surrounding double-quotes that hurl adds for string values
       captures[ match[ 1 ] ] = match[ 2 ].trim().replace( /^"(.*)"$/, "$1" );
     } else {
-      // Any non-capture `*` line (new section) or non-`*` line ends the block
+      // Empty separator "*" or a new section header ends the block
       inCaptures = false;
     }
   }
@@ -234,40 +235,33 @@ function parseCapturedVariables( stderrLines: string[] ): Record<string, string>
 }
 
 /**
- * Extract the response body from hurl --very-verbose stderr output.
- * After response headers hurl emits a blank `<` separator line; the body
- * follows as raw lines until the next `*` or `>` info line.
+ * Extract the response body from hurl --very-verbose stderr.
+ * Hurl emits:
+ *   * Response body:
+ *   * {line of body}
+ *   *
+ * We find the last such block (handles multiple requests in one cell).
  */
 function extractBodyFromVerboseStderr( stderrLines: string[] ): string | undefined {
-  let lastStatusIdx = -1;
+  let bodyStartIdx = -1;
 
   for ( let i = 0; i < stderrLines.length; i++ ) {
-    if ( /^<\s+HTTP\/[\d.]+\s+\d{3}\b/.test( stderrLines[ i ] ) ) {
-      lastStatusIdx = i;
+    if ( /^\*\s+Response body:\s*$/.test( stderrLines[ i ] ) ) {
+      bodyStartIdx = i + 1; // always update → picks up the last response
     }
-  }
-
-  if ( lastStatusIdx === -1 ) return undefined;
-
-  // Advance past response header lines to the blank `<` separator
-  let bodyStartIdx = -1;
-  for ( let i = lastStatusIdx + 1; i < stderrLines.length; i++ ) {
-    const line = stderrLines[ i ];
-    if ( /^<\s*$/.test( line ) ) {
-      bodyStartIdx = i + 1;
-      break;
-    }
-    if ( !/^</.test( line ) ) break;
   }
 
   if ( bodyStartIdx === -1 ) return undefined;
 
-  // Collect body lines until the next section marker
+  // Collect "* <content>" lines; a bare "*" or non-"*" line ends the block
   const bodyLines: string[] = [];
   for ( let i = bodyStartIdx; i < stderrLines.length; i++ ) {
-    const line = stderrLines[ i ];
-    if ( /^[*>]/.test( line ) || /^<\s+HTTP\//.test( line ) ) break;
-    bodyLines.push( line );
+    const m = /^\*\s(.+)$/.exec( stderrLines[ i ] );
+    if ( m ) {
+      bodyLines.push( m[ 1 ] );
+    } else {
+      break;
+    }
   }
 
   const body = bodyLines.join( "\n" ).trim();
@@ -284,12 +278,35 @@ function tryFormatJson( text: string ): string | undefined {
   }
 }
 
+/**
+ * Extract all error blocks from hurl stderr.
+ * Each block starts with "error:" and continues through its source-location
+ * lines (-->, |, digit |) including the ^^^ underline, stopping at the first
+ * blank line or unrelated line.
+ */
 function extractErrorSnippet( stderrLines: string[] ): string | undefined {
-  const arrowIdx = stderrLines.findIndex( l => /^\s*-->/.test( l ) );
-  if ( arrowIdx !== -1 ) {
-    const start = Math.max( 0, arrowIdx - 1 );
-    return stderrLines.slice( start, Math.min( stderrLines.length, arrowIdx + 5 ) ).join( "\n" ).trim();
+  const blocks: string[] = [];
+  let i = 0;
+
+  while ( i < stderrLines.length ) {
+    const line = stderrLines[ i ];
+    if ( line.startsWith( "error:" ) ) {
+      const blockLines: string[] = [ line ];
+      i++;
+      while ( i < stderrLines.length ) {
+        const bl = stderrLines[ i ];
+        if ( /^\s*(-->|\d*\s*\|)/.test( bl ) ) {
+          blockLines.push( bl );
+          i++;
+        } else {
+          break;
+        }
+      }
+      blocks.push( blockLines.join( "\n" ).trimEnd() );
+      continue;
+    }
+    i++;
   }
-  const errorLine = stderrLines.find( l => /\b(error|failed)\b/i.test( l ) && !/^[<>*]/.test( l.trim() ) );
-  return errorLine?.trim();
+
+  return blocks.length > 0 ? blocks.join( "\n\n" ).trim() : undefined;
 }
