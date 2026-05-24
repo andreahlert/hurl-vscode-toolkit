@@ -137,12 +137,17 @@
       {
         "command": "hurl-toolkit.runEntryFocused",
         "key": "ctrl+enter",
-        "when": "editorTextFocus && editorLangId == hurl"
+        "when": "editorTextFocus && editorLangId == hurl && !notebookCellEditorFocus"
       },
       {
         "command": "hurl-toolkit.runFileFocused",
         "key": "ctrl+shift+enter",
-        "when": "editorTextFocus && editorLangId == hurl"
+        "when": "editorTextFocus && editorLangId == hurl && !notebookCellEditorFocus"
+      },
+      {
+        "command": "notebook.cell.execute",
+        "key": "ctrl+enter",
+        "when": "notebookCellEditorFocus && notebookType == 'hurl-notebook'"
       }
     ],
     "configuration": {

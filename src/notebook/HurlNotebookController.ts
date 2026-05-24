@@ -98,6 +98,16 @@ export class HurlNotebookController {
         success = false;
       }
 
+      // Persist captured variables to the active environment profile
+      const stderrLines = stderr.split( /\r?\n/ );
+      const captures = parseCapturedVariables( stderrLines );
+      const profileName = this.environmentManager.getActiveEnvironmentName();
+      if ( profileName && Object.keys( captures ).length > 0 ) {
+        for ( const [ name, value ] of Object.entries( captures ) ) {
+          await this.environmentManager.saveVariableToProfile( profileName, name, value );
+        }
+      }
+
       const md = buildMarkdownOutput( stdout, stderr, success, settings.activeEnvironmentLabel );
       await execution.appendOutput( [
         new vscode.NotebookCellOutput( [
@@ -165,7 +175,9 @@ function buildMarkdownOutput(
     lines.push( "" );
   }
 
-  const body = stdout.trim();
+  // Show response body — fall back to extracting from verbose stderr output when
+  // hurl did not write to stdout (e.g. assertion failures on some hurl versions).
+  const body = stdout.trim() || extractBodyFromVerboseStderr( stderrLines );
   if ( body ) {
     const formatted = tryFormatJson( body );
     lines.push( "```" + ( formatted ? "json" : "" ) );
@@ -185,6 +197,81 @@ function buildMarkdownOutput(
   }
 
   return lines.join( "\n" );
+}
+
+/**
+ * Parse variables captured by a [Captures] section from hurl --very-verbose stderr.
+ * Hurl emits a block like:
+ *   * Captures
+ *       token: abc123
+ *       user_id: 42
+ */
+function parseCapturedVariables( stderrLines: string[] ): Record<string, string> {
+  const captures: Record<string, string> = {};
+  let inCaptures = false;
+
+  for ( const line of stderrLines ) {
+    // Detect start of Captures block (e.g. "* Captures" or "* Captures:")
+    if ( /^\*\s+Captures:?\s*$/.test( line ) ) {
+      inCaptures = true;
+      continue;
+    }
+
+    if ( !inCaptures ) continue;
+
+    // Capture entry: "*   name: value"
+    const match = /^\*\s{2,}([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.+)$/.exec( line );
+    if ( match ) {
+      // Strip surrounding double-quotes that hurl adds for string values
+      captures[ match[ 1 ] ] = match[ 2 ].trim().replace( /^"(.*)"$/, "$1" );
+    } else {
+      // Any non-capture `*` line (new section) or non-`*` line ends the block
+      inCaptures = false;
+    }
+  }
+
+  return captures;
+}
+
+/**
+ * Extract the response body from hurl --very-verbose stderr output.
+ * After response headers hurl emits a blank `<` separator line; the body
+ * follows as raw lines until the next `*` or `>` info line.
+ */
+function extractBodyFromVerboseStderr( stderrLines: string[] ): string | undefined {
+  let lastStatusIdx = -1;
+
+  for ( let i = 0; i < stderrLines.length; i++ ) {
+    if ( /^<\s+HTTP\/[\d.]+\s+\d{3}\b/.test( stderrLines[ i ] ) ) {
+      lastStatusIdx = i;
+    }
+  }
+
+  if ( lastStatusIdx === -1 ) return undefined;
+
+  // Advance past response header lines to the blank `<` separator
+  let bodyStartIdx = -1;
+  for ( let i = lastStatusIdx + 1; i < stderrLines.length; i++ ) {
+    const line = stderrLines[ i ];
+    if ( /^<\s*$/.test( line ) ) {
+      bodyStartIdx = i + 1;
+      break;
+    }
+    if ( !/^</.test( line ) ) break;
+  }
+
+  if ( bodyStartIdx === -1 ) return undefined;
+
+  // Collect body lines until the next section marker
+  const bodyLines: string[] = [];
+  for ( let i = bodyStartIdx; i < stderrLines.length; i++ ) {
+    const line = stderrLines[ i ];
+    if ( /^[*>]/.test( line ) || /^<\s+HTTP\//.test( line ) ) break;
+    bodyLines.push( line );
+  }
+
+  const body = bodyLines.join( "\n" ).trim();
+  return body || undefined;
 }
 
 function tryFormatJson( text: string ): string | undefined {

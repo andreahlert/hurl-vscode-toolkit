@@ -91,7 +91,7 @@ export function activate( context: vscode.ExtensionContext ): void {
   const outputChannel = vscode.window.createOutputChannel( "Hurl Toolkit" );
   const environmentManager = new HurlEnvironmentManager( context );
   const environmentStatusBarItem = vscode.window.createStatusBarItem( vscode.StatusBarAlignment.Left, 100 );
-  const graphqlProvider = new GraphQLCompletionProvider();
+  const graphqlProvider = new GraphQLCompletionProvider( globalThis.fetch.bind( globalThis ), environmentManager );
 
   activateHurlNotebook( context, environmentManager );
 

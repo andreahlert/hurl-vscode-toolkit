@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { parseHurlEntries, HurlEntry } from "../utils/hurlParser";
 import { GraphQLSchemaIndex, GraphQLTypeDefinition, GraphQLCompletionContext, GraphQLSelectionState, GraphQLBlockBounds, GraphQLOperationType } from "../utils/graphql.completion.types";
+import { HurlEnvironmentManager } from "../utils/environmentManager";
 
 type GraphQLFetchResponse = {
     ok: boolean;
@@ -136,6 +137,7 @@ export class GraphQLCompletionProvider {
 
     constructor(
         private readonly fetchImpl: GraphQLFetch = globalThis.fetch.bind( globalThis ),
+        private readonly environmentManager?: HurlEnvironmentManager,
     ) {
         this.outputChannel = vscode.window.createOutputChannel( "Hurl Toolkit GraphQL" );
     }
@@ -271,16 +273,21 @@ export class GraphQLCompletionProvider {
                 }
             }
 
-            const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
-            const activeProfileName = config.get<string>( "activeEnvironmentProfile", "" ).trim();
-            const profiles = config.get<Record<string, { variables?: Record<string, string> }>>( "environmentProfiles", {} ) ?? {};
-
-            for ( const [ profileName, profile ] of Object.entries( profiles ) ) {
-                const vars = profile.variables ?? {};
-                if ( trimmed in vars ) {
-                    if ( profileName === activeProfileName ) {
-                        return vars[ trimmed ];
-                    }
+            // Use the environment manager to correctly resolve the active profile,
+            // which may be stored in workspaceState (not just VS Code settings).
+            if ( this.environmentManager ) {
+                const profile = this.environmentManager.getActiveEnvironmentProfile();
+                if ( profile?.variables && trimmed in profile.variables ) {
+                    return profile.variables[ trimmed ];
+                }
+            } else {
+                // Fallback: read directly from config (misses workspaceState selection)
+                const config = vscode.workspace.getConfiguration( "hurl-toolkit" );
+                const activeProfileName = config.get<string>( "activeEnvironmentProfile", "" ).trim();
+                const profiles = config.get<Record<string, { variables?: Record<string, string> }>>( "environmentProfiles", {} ) ?? {};
+                const profile = profiles[ activeProfileName ];
+                if ( profile?.variables && trimmed in profile.variables ) {
+                    return profile.variables[ trimmed ];
                 }
             }
 
