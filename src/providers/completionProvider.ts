@@ -105,41 +105,44 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
             return items;
         }
 
-        if ( textBeforeCursor.endsWith( "{{" ) || textBeforeCursor.match( /\{\{\s*[A-Za-z0-9_-]*$/ ) ) {
+        if ( /\{\{?\s*[A-Za-z0-9_-]*$/.exec( textBeforeCursor ) ) {
             return this.getVariableCompletions( document );
         }
 
-        if ( ctx.context === "method-line" || textBeforeCursor.trim() === "" || textBeforeCursor.match( /^\s*[A-Z]*$/ ) ) {
-            if ( lineText.trim() === "" || textBeforeCursor.match( /^\s*[A-Z]*$/ ) ) {
+        if ( ctx.context === "method-line" || textBeforeCursor.trim() === "" || /^\s*[A-Z]*$/.exec( textBeforeCursor ) ) {
+            if ( lineText.trim() === "" || /^\s*[A-Z]*$/.exec( textBeforeCursor ) ) {
                 items.push( ...this.getMethodCompletions() );
             }
         }
 
-        if ( textBeforeCursor.match( /^\s*HTTP\s+\d*$/ ) ) {
+        if ( /^\s*HTTP\s+\d*$/.exec( textBeforeCursor ) ) {
             items.push( ...this.getStatusCodeCompletions() );
             return items;
         }
 
-        if ( textBeforeCursor.match( /^\s*\[[A-Za-z]*$/ ) ) {
+        if ( /^\s*\[[A-Za-z]*$/.exec( textBeforeCursor ) ) {
             items.push( ...this.getSectionCompletions() );
             return items;
         }
 
-        if ( ctx.context === "request-header" && textBeforeCursor.match( /^\s*[\w-]*$/ ) ) {
+        if ( ctx.context === "request-header" && this.isHeaderCompletionTrigger( textBeforeCursor ) ) {
             items.push( ...this.getHeaderCompletions() );
         }
 
-        const headerValueMatch = textBeforeCursor.match( /^\s*([\w-]+)\s*:\s*(.*)$/ );
+        const headerValueMatch = /^\s*([\w-]+)\s*:\s*(.*)$/.exec( textBeforeCursor );
         if ( headerValueMatch ) {
-            items.push( ...this.getHeaderValueCompletions( headerValueMatch[ 1 ] ) );
-            return items;
+            const valueCompletions = this.getHeaderValueCompletions( headerValueMatch[ 1 ] );
+            if ( valueCompletions.length > 0 ) {
+                items.push( ...valueCompletions );
+                return items;
+            }
         }
 
         if ( ctx.currentSection === "Options" ) {
-            if ( textBeforeCursor.match( /^\s*[a-z0-9.-]*$/i ) ) {
+            if ( /^\s*[a-z0-9.-]*$/i.exec( textBeforeCursor ) ) {
                 items.push( ...this.getOptionCompletions() );
             }
-            if ( textBeforeCursor.match( /^\s*variable\s*:\s*[A-Za-z0-9_-]*$/ ) ) {
+            if ( /^\s*variable\s*:\s*[A-Za-z0-9_-]*$/.exec( textBeforeCursor ) ) {
                 items.push( ...this.getVariableNameCompletions( document, "Known variable" ) );
             }
             return items;
@@ -149,7 +152,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
             if ( this.isAtQueryStart( textBeforeCursor ) ) {
                 items.push( ...this.getQueryCompletions( ASSERT_QUERY_COMPLETIONS ) );
             }
-            if ( textBeforeCursor.match( /\bvariable\s+\"[A-Za-z0-9_-]*$/ ) ) {
+            if ( /\bvariable\s+"[A-Za-z0-9_-]*$/.exec( textBeforeCursor ) ) {
                 items.push( ...this.getVariableNameCompletions( document, "Known variable" ) );
             }
             items.push( ...this.getAssertCompletions( textBeforeCursor ) );
@@ -211,7 +214,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
                 ? `${section.context} section alias for [${section.canonicalName}]`
                 : `${section.context} section`;
             item.documentation = section.description;
-            item.insertText = new vscode.SnippetString( `[${section.name}]\n\${0}` );
+            item.insertText = new vscode.SnippetString( `${section.name}` );
             item.filterText = `[${section.name}]`;
             item.sortText = section.canonicalName ? `1-${section.name}` : `0-${section.name}`;
             return item;
@@ -242,6 +245,10 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
             item.insertText = value;
             return item;
         } );
+    }
+
+    private isHeaderCompletionTrigger( textBeforeCursor: string ): boolean {
+        return /^\s*[\w-]*:?$/.exec( textBeforeCursor ) !== null;
     }
 
     private getOptionCompletions(): vscode.CompletionItem[] {
@@ -371,7 +378,7 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
         for ( const variable of this.collectKnownVariables( document ) ) {
             const item = new vscode.CompletionItem( variable.name, vscode.CompletionItemKind.Variable );
             item.detail = variable.detail;
-            item.insertText = `{{${variable.name}}}`;
+            item.insertText = `{${variable.name}}`;
             item.sortText = variable.sortText;
             items.push( item );
         }
@@ -380,9 +387,9 @@ export class HurlCompletionProvider implements vscode.CompletionItemProvider {
             const item = new vscode.CompletionItem( func.name, vscode.CompletionItemKind.Function );
             item.detail = func.detail;
             if ( func.name === "getEnv" ) {
-                item.insertText = new vscode.SnippetString( "{{getEnv \"${1:ENV_NAME}\"}}" );
+                item.insertText = new vscode.SnippetString( "{getEnv \"${1:ENV_NAME}\"}" );
             } else {
-                item.insertText = `{{${func.name}}}`;
+                item.insertText = `{${func.name}}`;
             }
             item.sortText = `6-${func.name}`;
             items.push( item );

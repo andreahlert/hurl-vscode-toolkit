@@ -45,7 +45,7 @@ suite( "Completion Provider", () => {
       "",                                    // line 11: inside options
       "[Captures]",                          // line 12: captures section
       "user_id: ",                           // line 13: capture query
-      "{{",                                  // line 14: variable
+      "{",                                   // line 14: variable
       "variable: api_host=example.org",      // line 15: options variable style
       'variable "user_id" ',                 // line 16: variable query in asserts/captures
       "",                                    // line 17
@@ -191,6 +191,16 @@ suite( "Completion Provider", () => {
     } );
     assert.ok( assertsItem, "[Asserts] completion should exist" );
     assert.ok( assertsItem!.documentation, "[Asserts] should have documentation" );
+    assert.strictEqual(
+      assertsItem!.insertText instanceof vscode.SnippetString ? assertsItem!.insertText.value : String( assertsItem!.insertText ),
+      "Asserts",
+      "Section completion should insert the bare section name"
+    );
+  } );
+
+  test( "Header values trigger after typing :", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 3, 13 ) );
+    assert.ok( hasLabel( completions, "application/json" ), "Should suggest header values after the colon" );
   } );
 
   test( "Assert predicates after jsonpath query", async () => {

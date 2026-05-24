@@ -3,24 +3,60 @@
   "name": "Hurl",
   "scopeName": "source.hurl",
   "patterns": [
-    { "include": "#comment" },
-    { "include": "#request-line" },
-    { "include": "#response-line" },
-    { "include": "#section" },
-    { "include": "#variable" },
-    { "include": "#header" },
-    { "include": "#assert-line" },
-    { "include": "#option-line" },
-    { "include": "#graphql-block" },
-    { "include": "#json-body" },
-    { "include": "#xml-body" },
-    { "include": "#multiline-string" },
-    { "include": "#file-reference" },
-    { "include": "#string" },
-    { "include": "#number" },
-    { "include": "#boolean" },
-    { "include": "#null" },
-    { "include": "#regex-literal" }
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#request-line"
+    },
+    {
+      "include": "#response-line"
+    },
+    {
+      "include": "#section"
+    },
+    {
+      "include": "#variable"
+    },
+    {
+      "include": "#header"
+    },
+    {
+      "include": "#assert-line"
+    },
+    {
+      "include": "#option-line"
+    },
+    {
+      "include": "#graphql-block"
+    },
+    {
+      "include": "#json-body"
+    },
+    {
+      "include": "#xml-body"
+    },
+    {
+      "include": "#multiline-string"
+    },
+    {
+      "include": "#file-reference"
+    },
+    {
+      "include": "#string"
+    },
+    {
+      "include": "#number"
+    },
+    {
+      "include": "#boolean"
+    },
+    {
+      "include": "#null"
+    },
+    {
+      "include": "#regex-literal"
+    }
   ],
   "repository": {
     "comment": {
@@ -30,10 +66,14 @@
     "request-line": {
       "match": "^\\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\\s+(.+)$",
       "captures": {
-        "1": { "name": "keyword.method.hurl" },
+        "1": {
+          "name": "keyword.method.hurl"
+        },
         "2": {
           "patterns": [
-            { "include": "#variable" },
+            {
+              "include": "#variable"
+            },
             {
               "match": ".+",
               "name": "string.other.url.hurl"
@@ -45,33 +85,51 @@
     "response-line": {
       "match": "^\\s*(HTTP)\\s+(\\d{3})(\\s.*)?$",
       "captures": {
-        "1": { "name": "keyword.other.http.hurl" },
-        "2": { "name": "constant.numeric.status-code.hurl" },
-        "3": { "name": "string.unquoted.status-text.hurl" }
+        "1": {
+          "name": "keyword.other.http.hurl"
+        },
+        "2": {
+          "name": "constant.numeric.status-code.hurl"
+        },
+        "3": {
+          "name": "string.unquoted.status-text.hurl"
+        }
       }
     },
     "section": {
       "match": "^\\s*(\\[(QueryStringParams|FormParams|MultipartFormData|Cookies|Options|Asserts|Captures|BasicAuth)\\])",
       "captures": {
-        "1": { "name": "entity.name.section.hurl" },
-        "2": { "name": "entity.name.tag.hurl" }
+        "1": {
+          "name": "entity.name.section.hurl"
+        },
+        "2": {
+          "name": "entity.name.tag.hurl"
+        }
       }
     },
     "variable": {
       "match": "\\{\\{(\\w+)\\}\\}",
       "name": "variable.other.hurl",
       "captures": {
-        "1": { "name": "variable.other.readwrite.hurl" }
+        "1": {
+          "name": "variable.other.readwrite.hurl"
+        }
       }
     },
     "header": {
       "match": "^\\s*([\\w-]+)\\s*(:)\\s*(.*)$",
       "captures": {
-        "1": { "name": "entity.name.header.hurl" },
-        "2": { "name": "punctuation.separator.key-value.hurl" },
+        "1": {
+          "name": "entity.name.header.hurl"
+        },
+        "2": {
+          "name": "punctuation.separator.key-value.hurl"
+        },
         "3": {
           "patterns": [
-            { "include": "#variable" },
+            {
+              "include": "#variable"
+            },
             {
               "match": ".+",
               "name": "string.unquoted.header-value.hurl"
@@ -83,23 +141,45 @@
     "assert-line": {
       "match": "^\\s*(status|header|jsonpath|xpath|body|bytes|cookie|url|regex|sha256|md5|duration|certificate)\\s+(\"[^\"]*\"\\s+)?(==|!=|>=|<=|>|<|startsWith|endsWith|contains|matches|exists|isBoolean|isCollection|isDate|isEmpty|isFloat|isInteger|isIsoDate|isNumber|isString|not\\s+\\w+)?(.*)$",
       "captures": {
-        "1": { "name": "support.function.query.hurl" },
+        "1": {
+          "name": "support.function.query.hurl"
+        },
         "2": {
           "patterns": [
-            { "include": "#string" },
-            { "include": "#variable" }
+            {
+              "include": "#string"
+            },
+            {
+              "include": "#variable"
+            }
           ]
         },
-        "3": { "name": "keyword.operator.assert.hurl" },
+        "3": {
+          "name": "keyword.operator.assert.hurl"
+        },
         "4": {
           "patterns": [
-            { "include": "#string" },
-            { "include": "#number" },
-            { "include": "#boolean" },
-            { "include": "#null" },
-            { "include": "#variable" },
-            { "include": "#regex-literal" },
-            { "include": "#filter-function" }
+            {
+              "include": "#string"
+            },
+            {
+              "include": "#number"
+            },
+            {
+              "include": "#boolean"
+            },
+            {
+              "include": "#null"
+            },
+            {
+              "include": "#variable"
+            },
+            {
+              "include": "#regex-literal"
+            },
+            {
+              "include": "#filter-function"
+            }
           ]
         }
       }
@@ -111,13 +191,23 @@
     "option-line": {
       "match": "^\\s*(aws-sigv4|compressed|connect-to|delay|http1\\.0|http1\\.1|http2|http3|insecure|ipv4|ipv6|location|max-redirs|output|proxy|resolve|retry|retry-interval|skip|ssl-no-revoke|unix-socket|verbose|very-verbose)\\s*(:)\\s*(.*)$",
       "captures": {
-        "1": { "name": "variable.parameter.option.hurl" },
-        "2": { "name": "punctuation.separator.key-value.hurl" },
+        "1": {
+          "name": "variable.parameter.option.hurl"
+        },
+        "2": {
+          "name": "punctuation.separator.key-value.hurl"
+        },
         "3": {
           "patterns": [
-            { "include": "#boolean" },
-            { "include": "#number" },
-            { "include": "#variable" },
+            {
+              "include": "#boolean"
+            },
+            {
+              "include": "#number"
+            },
+            {
+              "include": "#variable"
+            },
             {
               "match": ".+",
               "name": "string.unquoted.option-value.hurl"
@@ -130,28 +220,98 @@
       "begin": "^```graphql\\s*$",
       "end": "^```\\s*$",
       "beginCaptures": {
-        "0": { "name": "punctuation.definition.fenced.begin.hurl" }
+        "0": {
+          "name": "punctuation.definition.fenced.begin.hurl"
+        }
       },
       "endCaptures": {
-        "0": { "name": "punctuation.definition.fenced.end.hurl" }
+        "0": {
+          "name": "punctuation.definition.fenced.end.hurl"
+        }
       },
       "name": "meta.embedded.block.graphql",
-      "contentName": "meta.embedded.block.graphql"
+      "contentName": "meta.embedded.block.graphql",
+      "patterns": [
+        {
+          "include": "#graphql-comment"
+        },
+        {
+          "include": "#graphql-string"
+        },
+        {
+          "include": "#graphql-variable"
+        },
+        {
+          "include": "#graphql-directive"
+        },
+        {
+          "include": "#graphql-keyword"
+        },
+        {
+          "include": "#graphql-punctuation"
+        },
+        {
+          "include": "#graphql-number"
+        },
+        {
+          "include": "#graphql-name"
+        }
+      ]
+    },
+    "graphql-comment": {
+      "match": "#.*$",
+      "name": "comment.line.number-sign.graphql"
+    },
+    "graphql-string": {
+      "match": "\"(?:\\\\.|[^\"\\\\])*\"",
+      "name": "string.quoted.double.graphql"
+    },
+    "graphql-variable": {
+      "match": "\\$[_A-Za-z][_0-9A-Za-z]*",
+      "name": "variable.other.graphql"
+    },
+    "graphql-directive": {
+      "match": "@[A-Za-z][_0-9A-Za-z]*",
+      "name": "keyword.operator.directive.graphql"
+    },
+    "graphql-keyword": {
+      "match": "\\b(query|mutation|subscription|fragment|on|type|interface|union|enum|input|scalar|directive|implements|extend|schema|repeatable)\\b",
+      "name": "keyword.control.graphql"
+    },
+    "graphql-punctuation": {
+      "match": "[!(){}:\\[\\]=|,]",
+      "name": "punctuation.graphql"
+    },
+    "graphql-number": {
+      "match": "\\b-?\\d+(?:\\.\\d+)?\\b",
+      "name": "constant.numeric.graphql"
+    },
+    "graphql-name": {
+      "match": "\\b[_A-Za-z][_0-9A-Za-z]*\\b",
+      "name": "entity.name.graphql"
     },
     "json-body": {
       "begin": "^\\s*(\\{)\\s*$",
       "end": "^\\s*(\\})\\s*$",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.dictionary.begin.json" }
+        "1": {
+          "name": "punctuation.definition.dictionary.begin.json"
+        }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.dictionary.end.json" }
+        "1": {
+          "name": "punctuation.definition.dictionary.end.json"
+        }
       },
       "name": "meta.embedded.block.json",
       "contentName": "meta.embedded.block.json",
       "patterns": [
-        { "include": "#variable" },
-        { "include": "source.json" }
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "source.json"
+        }
       ]
     },
     "xml-body": {
@@ -160,8 +320,12 @@
       "name": "meta.embedded.block.xml",
       "contentName": "meta.embedded.block.xml",
       "patterns": [
-        { "include": "#variable" },
-        { "include": "text.xml" }
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "text.xml"
+        }
       ]
     },
     "multiline-string": {
@@ -192,8 +356,12 @@
     "file-reference": {
       "match": "\\bfile,([^;]+);?\\s*(.*)$",
       "captures": {
-        "1": { "name": "string.other.file-path.hurl" },
-        "2": { "name": "string.other.content-type.hurl" }
+        "1": {
+          "name": "string.other.file-path.hurl"
+        },
+        "2": {
+          "name": "string.other.content-type.hurl"
+        }
       }
     }
   }

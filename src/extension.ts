@@ -118,7 +118,7 @@ export function activate( context: vscode.ExtensionContext ): void {
       "hurl-toolkit.fetchGraphQLSchema",
       async () => {
         const editor = vscode.window.activeTextEditor;
-        if ( !editor || editor.document.languageId !== "hurl" ) {
+        if ( editor?.document.languageId !== "hurl" ) {
           vscode.window.showErrorMessage( "Hurl Toolkit: Open a .hurl file and place the cursor inside a ```graphql block." );
           return;
         }

@@ -1,4 +1,11 @@
 {
+  "Http Status Code Assert": {
+    "prefix": "status",
+    "body": [
+      "HTTP ${1:200}"
+    ],
+    "description": "Simple request with HTTP status code assertion"
+  },
   "Basic Request With Asserts": {
     "prefix": "hurl-get",
     "body": [

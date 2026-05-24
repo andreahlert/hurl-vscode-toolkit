@@ -260,7 +260,7 @@ function showResponseWebview( title: string, stdout: string, stderr: string, err
     body { font-family: var(--vscode-font-family); padding: 16px; color: var(--vscode-foreground); background: var(--vscode-editor-background); }
     h2 { margin-top: 0; }
     pre {
-      background: var(--vscode-textBlockQuote-background);
+      background: transparent;
       padding: 12px;
       border-radius: 4px;
       overflow-x: auto;
@@ -341,29 +341,32 @@ function parseResponseOutput( stdout: string, stderr: string ): ParsedResponseOu
 }
 
 function buildErrorMarkup( stderr: string, errorMessage?: string ): string {
-  if ( stderr ) {
-    const lines = stderr.split( /\r?\n/ );
-    // Find typical compiler-like pointer line that starts with "-->"
-    const arrowIdx = lines.findIndex( ( l ) => /^\s*-->/.test( l ) );
-    if ( arrowIdx !== -1 ) {
-      // Start showing from one line before the arrow (if present)
-      const start = Math.max( 0, arrowIdx - 1 );
-      const end = Math.min( lines.length, arrowIdx + 4 );
-      const snippet = lines.slice( start, end ).join( "\n" ).trim();
-      return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
-    }
-
-    // Fallback: show trimmed stderr if no arrow marker
-    const trimmed = stderr.trim();
-    if ( trimmed ) {
-      return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( trimmed )}</code></pre></div>`;
-    }
-  }
-
+  // If there's an explicit error message (from the thrown error), show it
   if ( errorMessage ) {
     return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( errorMessage )}</code></pre></div>`;
   }
 
+  if ( !stderr ) return "";
+
+  const lines = stderr.split( /\r?\n/ );
+  // Primary indicator: arrow-style pointer commonly used in parse errors
+  const arrowIdx = lines.findIndex( ( l ) => /^\s*-->/.test( l ) );
+  if ( arrowIdx !== -1 ) {
+    const start = Math.max( 0, arrowIdx - 1 );
+    const end = Math.min( lines.length, arrowIdx + 4 );
+    const snippet = lines.slice( start, end ).join( "\n" ).trim();
+    return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
+  }
+
+  // Secondary indicators: stderr contains explicit error keywords
+  const errorKeywordRe = /\b(error|failed|exception|panic|unclosed|invalid|fatal)\b/i;
+  if ( errorKeywordRe.test( stderr ) ) {
+    const trimmed = stderr.trim();
+    const snippet = trimmed.split( /\r?\n/ ).slice( 0, 8 ).join( "\n" );
+    return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
+  }
+
+  // Otherwise treat stderr as informational (don't surface as failure)
   return "";
 }
 
