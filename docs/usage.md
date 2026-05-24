@@ -37,6 +37,36 @@ You can also use the command palette and run the extension commands directly:
 
 Results appear in the extension output channel. If webview previews are enabled, the response panel is reused between runs.
 
+## Use the Notebook View
+
+Any `.hurl` file can be opened as a VS Code notebook. Each HTTP request becomes an individual executable cell, letting you run requests one at a time and see rich output inline.
+
+### Open a file as a notebook
+
+Three ways to switch to the notebook view:
+
+- Right-click a `.hurl` file in the Explorer and choose **Hurl: Open as Notebook**
+- Click the notebook icon ($(notebook)) in the editor title bar while a `.hurl` file is active
+- Open the command palette and run **Hurl: Open as Notebook**
+
+To go back to the plain text editor, close the notebook tab and reopen the file normally.
+
+### Run cells
+
+Each cell contains one Hurl request entry. Use the cell run button or **Run All** in the notebook toolbar to execute cells. The active environment profile applies — variables, CLI arguments, and environment variables from the selected profile are all passed to hurl.
+
+Cell output is rendered as markdown and includes:
+
+- A success/failure indicator and the active environment label
+- The HTTP status line (e.g. `HTTP/1.1 200 OK`)
+- A collapsible **Response Headers** block
+- The response body, formatted as JSON when applicable
+- An **Error** block with the assertion failure location when a request fails
+
+### Markdown cells
+
+Lines beginning with `# md:` in a `.hurl` file become markdown cells in the notebook view. You can add these to annotate requests. The file remains valid Hurl syntax and can still be run with the plain text CodeLens or keyboard shortcuts.
+
 ## Use Environment Profiles
 
 Environment profiles let you keep separate settings for local, staging, and production runs.

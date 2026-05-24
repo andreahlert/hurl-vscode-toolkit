@@ -48,6 +48,19 @@ Context-aware completions for:
 
 ![IntelliSense Completions](assets/demo-completions.gif)
 
+### Notebook View
+
+Open any `.hurl` file as a VS Code notebook by right-clicking it in the Explorer and selecting **Hurl: Open as Notebook**, clicking the notebook icon in the editor title bar, or running the command from the palette.
+
+Each HTTP request becomes an executable cell. Click the run button on a cell (or use **Run All**) to execute it with hurl. Results render inline as markdown:
+
+- Status line (`HTTP/1.1 200 OK`)
+- Collapsible response headers block
+- Formatted JSON body (or raw body for other content types)
+- Assertion error details when a request fails
+
+The active environment profile is respected, so all variables, CLI arguments, and environment variables defined in your profile apply to notebook runs. The `.hurl` file is kept in its original text format on disk — the notebook view is just an alternate editor.
+
 ### Hover Documentation
 
 Hover over any keyword to see documentation. Methods, status codes, sections, options, assert predicates, filter functions, and headers all provide contextual information.
