@@ -12,6 +12,8 @@ export class HurlCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): vscode.CodeLens[] {
+    // Notebook cells have their own native run buttons — skip CodeLens there
+    if ( document.uri.scheme === "vscode-notebook-cell" ) return [];
     const entries = parseHurlEntries( document );
     const lenses: vscode.CodeLens[] = [];
 

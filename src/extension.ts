@@ -9,6 +9,7 @@ import {
   createRunFileCommand,
 } from "./providers/codeLensProvider";
 import { HurlEnvironmentManager } from "./utils/environmentManager";
+import { activateHurlNotebook, HURL_NOTEBOOK_TYPE } from "./notebook/index";
 
 type PickItem = vscode.QuickPickItem & { value: string };
 
@@ -91,6 +92,8 @@ export function activate( context: vscode.ExtensionContext ): void {
   const environmentManager = new HurlEnvironmentManager( context );
   const environmentStatusBarItem = vscode.window.createStatusBarItem( vscode.StatusBarAlignment.Left, 100 );
   const graphqlProvider = new GraphQLCompletionProvider();
+
+  activateHurlNotebook( context, environmentManager );
 
   const updateEnvironmentStatusBar = () => {
     environmentStatusBarItem.text = `Hurl: ${environmentManager.getActiveEnvironmentLabel()}`;
@@ -255,6 +258,18 @@ export function activate( context: vscode.ExtensionContext ): void {
         void vscode.window.showInformationMessage(
           `Variable "{{${variableName.trim()}}}" saved to profile "${targetProfile}". Use it as: ${usageHint}`
         );
+      }
+    )
+    ,
+    vscode.commands.registerCommand(
+      "hurl-toolkit.openAsNotebook",
+      async ( uri?: vscode.Uri ) => {
+        const targetUri = uri ?? vscode.window.activeTextEditor?.document.uri;
+        if ( !targetUri?.fsPath.endsWith( ".hurl" ) ) {
+          vscode.window.showErrorMessage( "Hurl Toolkit: Open a .hurl file first." );
+          return;
+        }
+        await vscode.commands.executeCommand( "vscode.openWith", targetUri, HURL_NOTEBOOK_TYPE );
       }
     )
     ,

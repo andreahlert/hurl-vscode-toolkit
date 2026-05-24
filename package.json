@@ -31,9 +31,10 @@
     "request"
   ],
   "activationEvents": [
-    "onLanguage:hurl",
+    "onNotebook:hurl-notebook",
     "onCommand:hurl-toolkit.selectEnvironment",
-    "onCommand:hurl-toolkit.clearEnvironment"
+    "onCommand:hurl-toolkit.clearEnvironment",
+    "onCommand:hurl-toolkit.openAsNotebook"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -49,9 +50,18 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./assets/icon.svg",
-          "dark": "./assets/icon.svg"
+          "light": "./assets/hurl-icon.svg",
+          "dark": "./assets/hurl-icon.svg"
         }
+      }
+    ],
+    "notebooks": [
+      {
+        "type": "hurl-notebook",
+        "displayName": "Hurl Notebook",
+        "selector": [
+          { "filenamePattern": "*.hurl" }
+        ]
       }
     ],
     "grammars": [
@@ -100,8 +110,29 @@
       {
         "command": "hurl-toolkit.manageVariables",
         "title": "Hurl: Manage Variables"
+      },
+      {
+        "command": "hurl-toolkit.openAsNotebook",
+        "title": "Hurl: Open as Notebook",
+        "icon": "$(notebook)"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "hurl-toolkit.openAsNotebook",
+          "when": "resourceExtname == .hurl",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "hurl-toolkit.openAsNotebook",
+          "when": "resourceExtname == .hurl && activeEditorIsNotPreview",
+          "group": "navigation"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "hurl-toolkit.runEntryFocused",

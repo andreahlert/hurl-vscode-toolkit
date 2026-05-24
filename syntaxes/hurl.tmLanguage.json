@@ -2,261 +2,227 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Hurl",
   "scopeName": "source.hurl",
+  "fileTypes": ["hurl"],
   "patterns": [
-    {
-      "include": "#comment"
-    },
-    {
-      "include": "#request-line"
-    },
-    {
-      "include": "#response-line"
-    },
-    {
-      "include": "#section"
-    },
-    {
-      "include": "#variable"
-    },
-    {
-      "include": "#header"
-    },
-    {
-      "include": "#assert-line"
-    },
-    {
-      "include": "#option-line"
-    },
-    {
-      "include": "#graphql-block"
-    },
-    {
-      "include": "#json-body"
-    },
-    {
-      "include": "#xml-body"
-    },
-    {
-      "include": "#multiline-string"
-    },
-    {
-      "include": "#file-reference"
-    },
-    {
-      "include": "#string"
-    },
-    {
-      "include": "#number"
-    },
-    {
-      "include": "#boolean"
-    },
-    {
-      "include": "#null"
-    },
-    {
-      "include": "#regex-literal"
-    }
+    { "include": "#comment" },
+    { "include": "#request-line" },
+    { "include": "#response-line" },
+    { "include": "#section-header" },
+    { "include": "#graphql-block" },
+    { "include": "#json-body" },
+    { "include": "#xml-body" },
+    { "include": "#multiline-string" },
+    { "include": "#oneline-base64" },
+    { "include": "#oneline-hex" },
+    { "include": "#oneline-file" },
+    { "include": "#oneline-string" },
+    { "include": "#assert-predicate" },
+    { "include": "#query-keyword" },
+    { "include": "#filter-keyword" },
+    { "include": "#option-keyword" },
+    { "include": "#template" },
+    { "include": "#literal" },
+    { "include": "#regex-literal" },
+    { "include": "#number" },
+    { "include": "#quoted-string" },
+    { "include": "#key-value" }
   ],
   "repository": {
     "comment": {
-      "match": "^\\s*#.*$",
+      "match": "(#(?!md:).*)$",
       "name": "comment.line.number-sign.hurl"
     },
     "request-line": {
-      "match": "^\\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\\s+(.+)$",
+      "match": "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\\s+(\\S+)$",
       "captures": {
-        "1": {
-          "name": "keyword.method.hurl"
-        },
-        "2": {
-          "patterns": [
-            {
-              "include": "#variable"
-            },
-            {
-              "match": ".+",
-              "name": "string.other.url.hurl"
-            }
-          ]
-        }
+        "1": { "name": "keyword.other.http-method.hurl" },
+        "2": { "name": "markup.underline.link.hurl" }
       }
     },
     "response-line": {
-      "match": "^\\s*(HTTP)\\s+(\\d{3})(\\s.*)?$",
+      "match": "^(HTTP(?:/[0-9\\.]+)?)\\s+([0-9]{3})(?:\\s+(.*))?$",
       "captures": {
-        "1": {
-          "name": "keyword.other.http.hurl"
-        },
-        "2": {
-          "name": "constant.numeric.status-code.hurl"
-        },
-        "3": {
-          "name": "string.unquoted.status-text.hurl"
-        }
+        "1": { "name": "keyword.control.http-version.hurl" },
+        "2": { "name": "constant.numeric.http-status-code.hurl" },
+        "3": { "name": "string.unquoted.http-reason.hurl" }
       }
     },
-    "section": {
-      "match": "^\\s*(\\[(QueryStringParams|FormParams|MultipartFormData|Cookies|Options|Asserts|Captures|BasicAuth)\\])",
+    "section-header": {
+      "match": "^\\[(QueryStringParams|Query|FormParams|Form|MultipartFormData|Multipart|Cookies|Captures|Asserts|BasicAuth|Options)\\]\\s*$",
       "captures": {
-        "1": {
-          "name": "entity.name.section.hurl"
-        },
-        "2": {
-          "name": "entity.name.tag.hurl"
-        }
-      }
-    },
-    "variable": {
-      "match": "\\{\\{(\\w+)\\}\\}",
-      "name": "variable.other.hurl",
-      "captures": {
-        "1": {
-          "name": "variable.other.readwrite.hurl"
-        }
-      }
-    },
-    "header": {
-      "match": "^\\s*([\\w-]+)\\s*(:)\\s*(.*)$",
-      "captures": {
-        "1": {
-          "name": "entity.name.header.hurl"
-        },
-        "2": {
-          "name": "punctuation.separator.key-value.hurl"
-        },
-        "3": {
-          "patterns": [
-            {
-              "include": "#variable"
-            },
-            {
-              "match": ".+",
-              "name": "string.unquoted.header-value.hurl"
-            }
-          ]
-        }
-      }
-    },
-    "assert-line": {
-      "match": "^\\s*(status|header|jsonpath|xpath|body|bytes|cookie|url|regex|sha256|md5|duration|certificate)\\s+(\"[^\"]*\"\\s+)?(==|!=|>=|<=|>|<|startsWith|endsWith|contains|matches|exists|isBoolean|isCollection|isDate|isEmpty|isFloat|isInteger|isIsoDate|isNumber|isString|not\\s+\\w+)?(.*)$",
-      "captures": {
-        "1": {
-          "name": "support.function.query.hurl"
-        },
-        "2": {
-          "patterns": [
-            {
-              "include": "#string"
-            },
-            {
-              "include": "#variable"
-            }
-          ]
-        },
-        "3": {
-          "name": "keyword.operator.assert.hurl"
-        },
-        "4": {
-          "patterns": [
-            {
-              "include": "#string"
-            },
-            {
-              "include": "#number"
-            },
-            {
-              "include": "#boolean"
-            },
-            {
-              "include": "#null"
-            },
-            {
-              "include": "#variable"
-            },
-            {
-              "include": "#regex-literal"
-            },
-            {
-              "include": "#filter-function"
-            }
-          ]
-        }
-      }
-    },
-    "filter-function": {
-      "match": "\\b(count|daysAfterNow|daysBeforeNow|decode|format|htmlEscape|htmlUnescape|jsonpath|nth|regex|replace|split|toDate|toFloat|toInt|urlDecode|urlEncode|xpath)\\b",
-      "name": "support.function.filter.hurl"
-    },
-    "option-line": {
-      "match": "^\\s*(aws-sigv4|compressed|connect-to|delay|http1\\.0|http1\\.1|http2|http3|insecure|ipv4|ipv6|location|max-redirs|output|proxy|resolve|retry|retry-interval|skip|ssl-no-revoke|unix-socket|verbose|very-verbose)\\s*(:)\\s*(.*)$",
-      "captures": {
-        "1": {
-          "name": "variable.parameter.option.hurl"
-        },
-        "2": {
-          "name": "punctuation.separator.key-value.hurl"
-        },
-        "3": {
-          "patterns": [
-            {
-              "include": "#boolean"
-            },
-            {
-              "include": "#number"
-            },
-            {
-              "include": "#variable"
-            },
-            {
-              "match": ".+",
-              "name": "string.unquoted.option-value.hurl"
-            }
-          ]
-        }
+        "0": { "name": "entity.name.section.hurl" },
+        "1": { "name": "entity.name.section.name.hurl" }
       }
     },
     "graphql-block": {
       "begin": "^```graphql\\s*$",
       "end": "^```\\s*$",
       "beginCaptures": {
-        "0": {
-          "name": "punctuation.definition.fenced.begin.hurl"
-        }
+        "0": { "name": "punctuation.definition.fenced.begin.hurl" }
       },
       "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.fenced.end.hurl"
-        }
+        "0": { "name": "punctuation.definition.fenced.end.hurl" }
       },
       "name": "meta.embedded.block.graphql",
       "contentName": "meta.embedded.block.graphql",
       "patterns": [
+        { "include": "#graphql-comment" },
+        { "include": "#graphql-string" },
+        { "include": "#graphql-variable" },
+        { "include": "#graphql-directive" },
+        { "include": "#graphql-keyword" },
+        { "include": "#graphql-punctuation" },
+        { "include": "#graphql-number" },
+        { "include": "#graphql-name" }
+      ]
+    },
+    "json-body": {
+      "begin": "^\\s*(\\{)\\s*$",
+      "end": "^\\s*(\\})\\s*$",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.dictionary.begin.json" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.dictionary.end.json" }
+      },
+      "name": "meta.embedded.block.json",
+      "contentName": "meta.embedded.block.json",
+      "patterns": [
+        { "include": "#template" },
+        { "include": "source.json" }
+      ]
+    },
+    "xml-body": {
+      "begin": "^\\s*(<\\?xml|<\\w)",
+      "end": "^\\s*$",
+      "name": "meta.embedded.block.xml",
+      "contentName": "meta.embedded.block.xml",
+      "patterns": [
+        { "include": "#template" },
+        { "include": "text.xml" }
+      ]
+    },
+    "multiline-string": {
+      "begin": "^```(base64|hex|json|xml)?",
+      "end": "^```",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.hurl" },
+        "1": { "name": "storage.type.multiline-string.hurl" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.hurl" }
+      },
+      "name": "string.multiline.hurl",
+      "patterns": [
+        { "include": "#template" }
+      ]
+    },
+    "oneline-base64": {
+      "match": "(base64,)([A-Za-z0-9+/= \\n]*)(;)",
+      "captures": {
+        "1": { "name": "keyword.other.base64.hurl" },
+        "2": { "name": "string.unquoted.base64.hurl" },
+        "3": { "name": "punctuation.terminator.hurl" }
+      }
+    },
+    "oneline-hex": {
+      "match": "(hex,)([0-9A-Fa-f]*)(;)",
+      "captures": {
+        "1": { "name": "keyword.other.hex.hurl" },
+        "2": { "name": "constant.numeric.hex.hurl" },
+        "3": { "name": "punctuation.terminator.hurl" }
+      }
+    },
+    "oneline-file": {
+      "match": "(file,)([^;]+)(;)",
+      "captures": {
+        "1": { "name": "keyword.other.file.hurl" },
+        "2": { "name": "string.unquoted.filename.hurl" },
+        "3": { "name": "punctuation.terminator.hurl" }
+      }
+    },
+    "oneline-string": {
+      "begin": "`",
+      "end": "`",
+      "name": "string.quoted.backtick.hurl",
+      "patterns": [
+        { "include": "#template" },
+        { "match": "\\\\.", "name": "constant.character.escape.hurl" }
+      ]
+    },
+    "assert-predicate": {
+      "match": "(not\\s+)?(==|!=|>=|<=|>|<|contains|startsWith|endsWith|matches|exists|isString|isInteger|isFloat|isBoolean|isCollection|isDate|isEmpty|isList|isObject|isUuid|isIpv4|isIpv6|isIsoDate|isNumber)\\b",
+      "captures": {
+        "1": { "name": "keyword.operator.logical.not.hurl" },
+        "2": { "name": "keyword.operator.predicate.hurl" }
+      }
+    },
+    "query-keyword": {
+      "match": "\\b(status|version|url|ip|body|duration|sha256|md5|bytes|header|cookie|xpath|jsonpath|regex|variable|certificate)\\b",
+      "name": "support.function.query.hurl"
+    },
+    "filter-keyword": {
+      "match": "\\b(base64Decode|base64Encode|base64UrlSafeDecode|base64UrlSafeEncode|count|daysAfterNow|daysBeforeNow|decode|first|last|location|toFloat|toHex|toInt|toString|toDate|htmlEscape|htmlUnescape|urlDecode|urlEncode|utf8Decode|utf8Encode|nth|split|regex|replace|replaceRegex|jsonpath|xpath|dateFormat|urlQueryParam|format)\\b",
+      "name": "support.function.filter.hurl"
+    },
+    "option-keyword": {
+      "match": "^(aws-sigv4|cacert|cert|key|compressed|connect-to|connect-timeout|delay|location|location-trusted|header|http1\\.0|http1\\.1|http2|http3|insecure|ipv4|ipv6|limit-rate|max-redirs|max-time|netrc|netrc-file|netrc-optional|output|path-as-is|pinnedpubkey|proxy|repeat|resolve|retry|retry-interval|skip|ssl-no-revoke|unix-socket|user|variable|verbose|very-verbose)\\s*(:)",
+      "captures": {
+        "1": { "name": "support.type.option-name.hurl" },
+        "2": { "name": "punctuation.separator.key-value.hurl" }
+      }
+    },
+    "template": {
+      "begin": "\\{\\{",
+      "end": "\\}\\}",
+      "beginCaptures": { "0": { "name": "punctuation.definition.template.begin.hurl" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.template.end.hurl" } },
+      "name": "meta.template.hurl",
+      "patterns": [
         {
-          "include": "#graphql-comment"
+          "match": "\\b(getEnv|newDate|newUuid)\\b",
+          "name": "support.function.builtin.hurl"
         },
         {
-          "include": "#graphql-string"
-        },
-        {
-          "include": "#graphql-variable"
-        },
-        {
-          "include": "#graphql-directive"
-        },
-        {
-          "include": "#graphql-keyword"
-        },
-        {
-          "include": "#graphql-punctuation"
-        },
-        {
-          "include": "#graphql-number"
-        },
-        {
-          "include": "#graphql-name"
+          "match": "[A-Za-z][A-Za-z_\\-0-9]*",
+          "name": "variable.other.template.hurl"
         }
       ]
+    },
+    "literal": {
+      "match": "\\b(true|false|null)\\b",
+      "name": "constant.language.hurl"
+    },
+    "regex-literal": {
+      "begin": "(?<=[\\s,])(\\/)",
+      "end": "(\\/)",
+      "beginCaptures": { "1": { "name": "punctuation.definition.regex.begin.hurl" } },
+      "endCaptures": { "1": { "name": "punctuation.definition.regex.end.hurl" } },
+      "name": "string.regexp.hurl",
+      "patterns": [
+        { "match": "\\\\.", "name": "constant.character.escape.hurl" }
+      ]
+    },
+    "number": {
+      "match": "\\b-?\\d+(\\.\\d+)?\\b",
+      "name": "constant.numeric.hurl"
+    },
+    "quoted-string": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.hurl",
+      "patterns": [
+        { "include": "#template" },
+        { "match": "\\\\.", "name": "constant.character.escape.hurl" }
+      ]
+    },
+    "key-value": {
+      "match": "^([A-Za-z0-9_][A-Za-z0-9_\\-.]*)\\s*(:)\\s*(.*)$",
+      "captures": {
+        "1": { "name": "support.type.property-name.hurl" },
+        "2": { "name": "punctuation.separator.key-value.hurl" },
+        "3": { "name": "string.unquoted.value.hurl" }
+      }
     },
     "graphql-comment": {
       "match": "#.*$",
@@ -289,80 +255,6 @@
     "graphql-name": {
       "match": "\\b[_A-Za-z][_0-9A-Za-z]*\\b",
       "name": "entity.name.graphql"
-    },
-    "json-body": {
-      "begin": "^\\s*(\\{)\\s*$",
-      "end": "^\\s*(\\})\\s*$",
-      "beginCaptures": {
-        "1": {
-          "name": "punctuation.definition.dictionary.begin.json"
-        }
-      },
-      "endCaptures": {
-        "1": {
-          "name": "punctuation.definition.dictionary.end.json"
-        }
-      },
-      "name": "meta.embedded.block.json",
-      "contentName": "meta.embedded.block.json",
-      "patterns": [
-        {
-          "include": "#variable"
-        },
-        {
-          "include": "source.json"
-        }
-      ]
-    },
-    "xml-body": {
-      "begin": "^\\s*(<\\?xml|<\\w)",
-      "end": "^\\s*$",
-      "name": "meta.embedded.block.xml",
-      "contentName": "meta.embedded.block.xml",
-      "patterns": [
-        {
-          "include": "#variable"
-        },
-        {
-          "include": "text.xml"
-        }
-      ]
-    },
-    "multiline-string": {
-      "begin": "^```",
-      "end": "^```",
-      "name": "string.quoted.other.multiline.hurl"
-    },
-    "string": {
-      "match": "\"([^\"]*)\"",
-      "name": "string.quoted.double.hurl"
-    },
-    "number": {
-      "match": "\\b-?\\d+(\\.\\d+)?\\b",
-      "name": "constant.numeric.hurl"
-    },
-    "boolean": {
-      "match": "\\b(true|false)\\b",
-      "name": "constant.language.boolean.hurl"
-    },
-    "null": {
-      "match": "\\bnull\\b",
-      "name": "constant.language.null.hurl"
-    },
-    "regex-literal": {
-      "match": "/([^/\\\\]|\\\\.)*?/",
-      "name": "string.regexp.hurl"
-    },
-    "file-reference": {
-      "match": "\\bfile,([^;]+);?\\s*(.*)$",
-      "captures": {
-        "1": {
-          "name": "string.other.file-path.hurl"
-        },
-        "2": {
-          "name": "string.other.content-type.hurl"
-        }
-      }
     }
   }
 }
