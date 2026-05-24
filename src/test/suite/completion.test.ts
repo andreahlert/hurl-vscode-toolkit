@@ -2,6 +2,7 @@ import * as assert from "node:assert";
 import * as vscode from "vscode";
 import * as path from "node:path";
 import { sleep, FIXTURES_PATH } from "./helpers";
+import { GraphQLCompletionProvider } from "../../providers/graphql.completion";
 
 async function getCompletions(
   doc: vscode.TextDocument,
@@ -49,12 +50,21 @@ suite( "Completion Provider", () => {
       'variable "user_id" ',                 // line 16: variable query in asserts/captures
       "",                                    // line 17
       "```graphql",                         // line 18: GraphQL fenced block
-      "query GetUser {",                    // line 19
-      "  user {",                           // line 20
-      "    ",                               // line 21: GraphQL completions
-      "  }",                                // line 22
-      "}",                                  // line 23
-      "```",                                // line 24
+      "",                                   // line 19: operation-root GraphQL completions
+      "query GetUser {",                    // line 20
+      "  ",                                 // line 21: query root fields
+      "  user(id: \"1\") {",             // line 22
+      "    ",                               // line 23: nested User fields
+      "  }",                                // line 24
+      "}",                                  // line 25
+      "",                                   // line 26
+      "mutation UpdateUser {",              // line 27
+      "  ",                                 // line 28: mutation root fields
+      "  updateUser(id: \"1\", name: \"Alice\") {", // line 29
+      "    ",                               // line 30: mutation payload fields
+      "  }",                                // line 31
+      "}",                                  // line 32
+      "```",                                // line 33
     ].join( "\n" );
 
     const uri = vscode.Uri.file( path.join( FIXTURES_PATH, "completion-test.hurl" ) );
@@ -68,17 +78,23 @@ suite( "Completion Provider", () => {
 
     const schemaContent = [
       "type Query {",
+      "  user(id: ID!): User",
+      "  viewer: User",
+      "}",
+      "",
+      "type Mutation {",
+      "  updateUser(id: ID!, name: String!): UpdateUserPayload",
+      "}",
+      "",
+      "type UpdateUserPayload {",
       "  user: User",
+      "  success: Boolean!",
       "}",
       "",
       "type User {",
       "  id: ID!",
       "  email: String!",
-      "}",
-      "",
-      "enum Role {",
-      "  ADMIN",
-      "  USER",
+      "  name: String!",
       "}",
     ].join( "\n" );
 
@@ -219,11 +235,124 @@ suite( "Completion Provider", () => {
     assert.ok( hasLabel( completions, "getEnv" ), "Should suggest getEnv function" );
   } );
 
-  test( "GraphQL fenced blocks include schema symbols from .graphqls files", async () => {
-    const completions = await getCompletions( doc, new vscode.Position( 21, 4 ) );
-    assert.ok( hasLabel( completions, "Query" ), "Should suggest GraphQL type definitions" );
-    assert.ok( hasLabel( completions, "User" ), "Should suggest GraphQL type definitions from .graphqls" );
-    assert.ok( hasLabel( completions, "id" ), "Should suggest GraphQL fields from .graphqls" );
-    assert.ok( hasLabel( completions, "ADMIN" ), "Should suggest GraphQL enum values from .graphqls" );
+  test( "GraphQL root suggestions stay limited to operations", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 19, 0 ) );
+    assert.ok( hasLabel( completions, "query" ), "Should suggest query" );
+    assert.ok( hasLabel( completions, "mutation" ), "Should suggest mutation" );
+    assert.ok( hasLabel( completions, "subscription" ), "Should suggest subscription" );
+    assert.ok( !hasLabel( completions, "User" ), "Should not leak schema types at the GraphQL root" );
+    assert.ok( !hasLabel( completions, "id" ), "Should not leak fields at the GraphQL root" );
+  } );
+
+  test( "Query root fields come from the Query return type", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 21, 2 ) );
+    assert.ok( hasLabel( completions, "user" ), "Should suggest Query fields" );
+    assert.ok( hasLabel( completions, "viewer" ), "Should suggest Query fields" );
+    assert.ok( !hasLabel( completions, "success" ), "Should not suggest mutation payload fields in a query root" );
+  } );
+
+  test( "Nested query fields come from the returned object type", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 23, 4 ) );
+    assert.ok( hasLabel( completions, "id" ), "Should suggest User fields" );
+    assert.ok( hasLabel( completions, "email" ), "Should suggest User fields" );
+    assert.ok( hasLabel( completions, "name" ), "Should suggest User fields" );
+    assert.ok( !hasLabel( completions, "success" ), "Should not suggest mutation payload fields inside User" );
+  } );
+
+  test( "Mutation payload fields come from the mutation return type", async () => {
+    const completions = await getCompletions( doc, new vscode.Position( 30, 4 ) );
+    assert.ok( hasLabel( completions, "user" ), "Should suggest mutation payload fields" );
+    assert.ok( hasLabel( completions, "success" ), "Should suggest mutation payload fields" );
+    assert.ok( !hasLabel( completions, "id" ), "Should not suggest User fields inside mutation payload" );
+  } );
+
+  test( "GraphQL introspection adds schema-backed completions", async () => {
+    const fetchCalls: Array<{ input: string; init?: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
+    const provider = new GraphQLCompletionProvider( async ( input, init ) => {
+      fetchCalls.push( { input, init } );
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            data: {
+              __schema: {
+                queryType: { name: "Query" },
+                mutationType: null,
+                subscriptionType: null,
+                types: [
+                  {
+                    kind: "OBJECT",
+                    name: "Query",
+                    fields: [
+                      {
+                        name: "searchUsers",
+                        type: {
+                          kind: "LIST",
+                          name: null,
+                          ofType: {
+                            kind: "OBJECT",
+                            name: "User",
+                            ofType: null,
+                          },
+                        },
+                      },
+                    ],
+                    enumValues: null,
+                  },
+                  {
+                    kind: "OBJECT",
+                    name: "User",
+                    fields: [
+                      {
+                        name: "id",
+                        type: {
+                          kind: "NON_NULL",
+                          name: null,
+                          ofType: {
+                            kind: "SCALAR",
+                            name: "ID",
+                            ofType: null,
+                          },
+                        },
+                      },
+                    ],
+                    enumValues: null,
+                  },
+                ],
+              },
+            },
+          };
+        },
+        async text() {
+          return "";
+        },
+      };
+    } );
+
+    const gqlDoc = await vscode.workspace.openTextDocument( {
+      language: "hurl",
+      content: [
+        "POST https://example.org/graphql",
+        "Content-Type: application/json",
+        "",
+        "```graphql",
+        "query Test {",
+        "  ",
+        "}",
+        "```",
+      ].join( "\n" ),
+    } );
+
+    await provider.fetchAndCacheSchemaForDocument( gqlDoc, new vscode.Position( 5, 2 ) );
+    const schema = await provider.buildGraphQLSchemaIndex( gqlDoc, new vscode.Position( 5, 2 ) );
+    const context = provider.getGraphQLCompletionContext( gqlDoc, new vscode.Position( 5, 2 ), schema );
+
+    assert.equal( context.parentTypeName, "Query", "Should resolve the GraphQL root type from introspection" );
+    assert.ok( fetchCalls.length === 1, "Should query the endpoint once" );
+
+    const completions = provider.getGraphQLFieldCompletions( schema, "Query", "" );
+    assert.ok( completions.some( ( item ) => ( typeof item.label === "string" ? item.label : item.label.label ) === "searchUsers" ),
+      "Should include fields from the introspected schema" );
   } );
 } );

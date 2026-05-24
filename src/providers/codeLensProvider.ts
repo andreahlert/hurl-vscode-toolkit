@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { parseHurlEntries } from "../utils/hurlParser";
+import { getContextAtPosition, parseHurlEntries } from "../utils/hurlParser";
 import { HurlEnvironmentManager } from "../utils/environmentManager";
 
 let responsePanel: vscode.WebviewPanel | undefined;
@@ -47,38 +47,110 @@ export class HurlCodeLensProvider implements vscode.CodeLensProvider {
 
 export function createRunEntryCommand(
   outputChannel: vscode.OutputChannel
-  , environmentManager: HurlEnvironmentManager
-): ( uri: vscode.Uri, entryIndex: number ) => Promise<void> {
-  return async ( uri: vscode.Uri, entryIndex: number ) => {
-    await runHurlCommand( outputChannel, environmentManager, uri, {
-      entryIndex,
+  , environmentManager: HurlEnvironmentManager,
+  focusWebview = false
+): ( ...args: unknown[] ) => Promise<void> {
+  return async ( ...args: unknown[] ) => {
+    const target = resolveRunEntryTarget( args );
+    if ( !target ) {
+      vscode.window.showErrorMessage( "Hurl Toolkit: Open a .hurl file and place the cursor inside a request." );
+      return;
+    }
+
+    await runHurlCommand( outputChannel, environmentManager, target.uri, {
+      entryIndex: target.entryIndex,
       includeRunRange: true,
       webviewTitle: "Hurl Response",
-      webviewMode: "entry",
+      focusWebview,
     } );
   };
 }
 
 export function createRunFileCommand(
   outputChannel: vscode.OutputChannel,
-  environmentManager: HurlEnvironmentManager
-): ( uri: vscode.Uri ) => Promise<void> {
-  return async ( uri: vscode.Uri ) => {
-    await runHurlCommand( outputChannel, environmentManager, uri, {
+  environmentManager: HurlEnvironmentManager,
+  focusWebview = false
+): ( ...args: unknown[] ) => Promise<void> {
+  return async ( ...args: unknown[] ) => {
+    const targetUri = resolveTargetUri( args );
+    if ( !targetUri ) {
+      vscode.window.showErrorMessage( "Hurl Toolkit: Open a .hurl file before running the file." );
+      return;
+    }
+
+    await runHurlCommand( outputChannel, environmentManager, targetUri, {
       includeRunRange: false,
       webviewTitle: "Hurl Results",
-      webviewMode: "file",
+      focusWebview,
     } );
   };
 }
 
-type RunMode = "entry" | "file";
-
 interface RunCommandOptions {
   entryIndex?: number;
   includeRunRange: boolean;
+  focusWebview: boolean;
   webviewTitle: string;
-  webviewMode: RunMode;
+}
+
+interface ResponseHeader {
+  name: string;
+  value: string;
+}
+
+interface ParsedResponseOutput {
+  statusLine?: string;
+  headers: ResponseHeader[];
+  body: string;
+  contentType?: string;
+}
+
+function resolveTargetUri( args: unknown[] ): vscode.Uri | undefined {
+  const firstArg = args[ 0 ];
+
+  if ( firstArg instanceof vscode.Uri ) {
+    return firstArg;
+  }
+
+  if ( firstArg && typeof firstArg === "object" && "scheme" in firstArg && "fsPath" in firstArg ) {
+    return firstArg as vscode.Uri;
+  }
+
+  const activeEditor = vscode.window.activeTextEditor;
+  if ( activeEditor?.document.languageId === "hurl" ) {
+    return activeEditor.document.uri;
+  }
+
+  return undefined;
+}
+
+function resolveRunEntryTarget( args: unknown[] ): { uri: vscode.Uri; entryIndex: number } | undefined {
+  const targetUri = resolveTargetUri( args );
+  if ( !targetUri ) {
+    return undefined;
+  }
+
+  const secondArg = args[ 1 ];
+  if ( typeof secondArg === "number" && Number.isFinite( secondArg ) ) {
+    return { uri: targetUri, entryIndex: secondArg };
+  }
+
+  if ( typeof secondArg === "string" ) {
+    const parsed = Number( secondArg );
+    if ( Number.isFinite( parsed ) ) {
+      return { uri: targetUri, entryIndex: parsed };
+    }
+  }
+
+  const activeEditor = vscode.window.activeTextEditor;
+  if ( activeEditor?.document.uri.toString() === targetUri.toString() ) {
+    const context = getContextAtPosition( activeEditor.document, activeEditor.selection.active );
+    if ( context.currentEntry ) {
+      return { uri: targetUri, entryIndex: context.currentEntry.entryIndex + 1 };
+    }
+  }
+
+  return undefined;
 }
 
 async function runHurlCommand(
@@ -126,7 +198,7 @@ async function runHurlCommand(
     outputChannel.appendLine( "--- Request completed successfully ---" );
 
     if ( showWebview && ( result.stdout || result.stderr ) ) {
-      showResponseWebview( options.webviewTitle, options.webviewMode, result.stdout, result.stderr );
+      showResponseWebview( options.webviewTitle, result.stdout, result.stderr, undefined, options.focusWebview );
     }
   } catch ( err: unknown ) {
     const error = err as { stderr?: string; stdout?: string; message?: string };
@@ -141,19 +213,29 @@ async function runHurlCommand(
     }
     outputChannel.appendLine( "" );
     outputChannel.appendLine( options.includeRunRange ? "--- Request failed ---" : "--- Execution failed ---" );
+
+    if ( showWebview && ( error.stdout || error.stderr || error.message ) ) {
+      showResponseWebview(
+        `${options.webviewTitle} (Failed)`,
+        error.stdout ?? "",
+        error.stderr ?? "",
+        error.message,
+        options.focusWebview
+      );
+    }
   }
 }
 
-function showResponseWebview( title: string, mode: RunMode, stdout: string, stderr: string ): void {
+function showResponseWebview( title: string, stdout: string, stderr: string, errorMessage?: string, focusWebview = false ): void {
   if ( responsePanel ) {
     responsePanel.title = title;
-    responsePanel.reveal( vscode.ViewColumn.Beside );
+    responsePanel.reveal( vscode.ViewColumn.Beside, !focusWebview );
   } else {
     responsePanel = vscode.window.createWebviewPanel(
       "hurlResponse",
       title,
-      vscode.ViewColumn.Beside,
-      { enableScripts: false }
+      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: !focusWebview },
+      { enableScripts: false, retainContextWhenHidden: true }
     );
 
     responsePanel.onDidDispose( () => {
@@ -162,30 +244,12 @@ function showResponseWebview( title: string, mode: RunMode, stdout: string, stde
   }
 
   const panel = responsePanel;
-
-  // Try to parse response body from verbose output
-  const bodyMatch = new RegExp( /\n\n([\s\S]*?)$/ ).exec( stderr );
-  const responseBody = bodyMatch ? bodyMatch[ 1 ] : stdout;
-
-  // Try to detect if it's JSON
-  let formattedBody: string;
-  try {
-    const parsed = JSON.parse( responseBody.trim() );
-    formattedBody = `<pre><code>${escapeHtml( JSON.stringify( parsed, null, 2 ) )}</code></pre>`;
-  } catch {
-    formattedBody = `<pre><code>${escapeHtml( responseBody )}</code></pre>`;
-  }
-
-  // Extract status and headers from verbose output
-  const headerLines = stderr
-    .split( "\n" )
-    .filter( ( l ) => l.startsWith( "< " ) )
-    .map( ( l ) => escapeHtml( l.substring( 2 ) ) )
+  const parsedOutput = parseResponseOutput( stdout, stderr );
+  const headerLines = parsedOutput.headers
+    .map( ( header ) => `${header.name}: ${header.value}` )
     .join( "\n" );
-
-  const rawOutputSection = mode === "file" && ( stdout || stderr )
-    ? `<div class="section"><div class="label">Raw Output</div><pre><code>${escapeHtml( [ stderr, stdout ].filter( Boolean ).join( "\n" ) )}</code></pre></div>`
-    : "";
+  const bodyMarkup = formatBodyMarkup( parsedOutput.body, parsedOutput.contentType );
+  const errorMarkup = buildErrorMarkup( stderr, errorMessage );
 
   panel.webview.html = `<!DOCTYPE html>
 <html lang="en">
@@ -195,18 +259,177 @@ function showResponseWebview( title: string, mode: RunMode, stdout: string, stde
   <style>
     body { font-family: var(--vscode-font-family); padding: 16px; color: var(--vscode-foreground); background: var(--vscode-editor-background); }
     h2 { margin-top: 0; }
-    pre { background: var(--vscode-textBlockQuote-background); padding: 12px; border-radius: 4px; overflow-x: auto; }
+    pre {
+      background: var(--vscode-textBlockQuote-background);
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .json-body pre {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
     .section { margin-bottom: 16px; }
     .label { font-weight: bold; margin-bottom: 4px; }
+    .json-line { white-space: pre; }
+    .json-key { color: var(--vscode-symbolIcon-keywordForeground, #c586c0); }
+    .json-string { color: var(--vscode-charts-green, #ce9178); }
+    .json-number { color: var(--vscode-charts-blue, #b5cea8); }
+    .json-boolean { color: var(--vscode-charts-orange, #569cd6); }
+    .json-null { color: var(--vscode-descriptionForeground); }
+    .json-punctuation { color: var(--vscode-foreground); }
+    .json-container { color: var(--vscode-foreground); }
+    .json-indent { display: inline-block; width: 1ch; }
+    .json-collapsed { color: var(--vscode-descriptionForeground); }
+    .line-wrap {
+      display: inline;
+    }
   </style>
 </head>
 <body>
   <h2>${escapeHtml( title )}</h2>
-  ${rawOutputSection}
-  ${headerLines ? `<div class="section"><div class="label">Response Headers</div><pre><code>${headerLines}</code></pre></div>` : ""}
-  <div class="section"><div class="label">Response Body</div>${formattedBody}</div>
+  ${errorMarkup}
+  ${parsedOutput.statusLine ? `<div class="section"><div class="label">Status</div><pre><code>${escapeHtml( parsedOutput.statusLine )}</code></pre></div>` : ""}
+  ${headerLines ? `<div class="section"><div class="label">Response Headers</div><pre><code>${escapeHtml( headerLines )}</code></pre></div>` : ""}
+  <div class="section"><div class="label">Response Body</div>${bodyMarkup}</div>
 </body>
 </html>`;
+}
+
+function parseResponseOutput( stdout: string, stderr: string ): ParsedResponseOutput {
+  const headers: ResponseHeader[] = [];
+  const headerMap = new Map<string, string>();
+  const stderrLines = stderr.split( /\r?\n/ );
+  let statusLine: string | undefined;
+  let body = stdout.trim();
+
+  for ( const line of stderrLines ) {
+    const responseLineMatch = /^<\s+(.*)$/.exec( line );
+    if ( !responseLineMatch ) {
+      continue;
+    }
+
+    const value = responseLineMatch[ 1 ].trim();
+    if ( /^HTTP\/[\d.]+\s+\d{3}\b/.test( value ) ) {
+      statusLine = value;
+      continue;
+    }
+
+    const separatorIndex = value.indexOf( ":" );
+    if ( separatorIndex > 0 ) {
+      const name = value.slice( 0, separatorIndex ).trim();
+      const headerValue = value.slice( separatorIndex + 1 ).trim();
+      headers.push( { name, value: headerValue } );
+      headerMap.set( name.toLowerCase(), headerValue );
+    }
+  }
+
+  if ( !body ) {
+    const bodyMatch = /\n\n([\s\S]*?)$/m.exec( stderr );
+    if ( bodyMatch ) {
+      body = bodyMatch[ 1 ].trim();
+    }
+  }
+
+  return {
+    statusLine,
+    headers,
+    body,
+    contentType: headerMap.get( "content-type" ),
+  };
+}
+
+function buildErrorMarkup( stderr: string, errorMessage?: string ): string {
+  if ( stderr ) {
+    const lines = stderr.split( /\r?\n/ );
+    // Find typical compiler-like pointer line that starts with "-->"
+    const arrowIdx = lines.findIndex( ( l ) => /^\s*-->/.test( l ) );
+    if ( arrowIdx !== -1 ) {
+      // Start showing from one line before the arrow (if present)
+      const start = Math.max( 0, arrowIdx - 1 );
+      const end = Math.min( lines.length, arrowIdx + 4 );
+      const snippet = lines.slice( start, end ).join( "\n" ).trim();
+      return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( snippet )}</code></pre></div>`;
+    }
+
+    // Fallback: show trimmed stderr if no arrow marker
+    const trimmed = stderr.trim();
+    if ( trimmed ) {
+      return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( trimmed )}</code></pre></div>`;
+    }
+  }
+
+  if ( errorMessage ) {
+    return `<div class="section"><div class="label">Failure</div><pre><code>${escapeHtml( errorMessage )}</code></pre></div>`;
+  }
+
+  return "";
+}
+
+function formatBodyMarkup( body: string, contentType?: string ): string {
+  if ( !body ) {
+    return '<div class="empty-state">No response body captured.</div>';
+  }
+
+  const trimmedBody = body.trim();
+  const shouldFormatAsJson = /json/i.test( contentType ?? "" ) || /^[\[{]/.test( trimmedBody );
+
+  if ( shouldFormatAsJson ) {
+    try {
+      return `<div class="json-body"><pre><code>${renderJsonWithColors( JSON.parse( trimmedBody ) )}</code></pre></div>`;
+    } catch {
+      // Fall through to plain text rendering.
+    }
+  }
+
+  return `<pre><code>${escapeHtml( body )}</code></pre>`;
+}
+
+
+function renderJsonWithColors( value: unknown, indent = 0 ): string {
+  const indentText = "  ".repeat( indent );
+
+  if ( value === null ) {
+    return `<span class="json-null">null</span>`;
+  }
+
+  if ( Array.isArray( value ) ) {
+    if ( value.length === 0 ) {
+      return `<span class="json-punctuation">[]</span>`;
+    }
+
+    const items = value.map( ( item ) => `${indentText}  ${renderJsonWithColors( item, indent + 1 )}` ).join( ",\n" );
+    return `<span class="json-punctuation">[</span>\n${items}\n${indentText}<span class="json-punctuation">]</span>`;
+  }
+
+  if ( typeof value === "object" ) {
+    const entries = Object.entries( value as Record<string, unknown> );
+    if ( entries.length === 0 ) {
+      return `<span class="json-punctuation">{}</span>`;
+    }
+
+    const properties = entries.map( ( [ key, item ] ) => {
+      const renderedValue = renderJsonWithColors( item, indent + 1 );
+      return `${indentText}  <span class="json-key">"${escapeHtml( key )}"</span><span class="json-punctuation">:</span> ${renderedValue}`;
+    } ).join( ",\n" );
+
+    return `<span class="json-punctuation">{</span>\n${properties}\n${indentText}<span class="json-punctuation">}</span>`;
+  }
+
+  if ( typeof value === "string" ) {
+    return `<span class="json-string">"${escapeHtml( value )}"</span>`;
+  }
+
+  if ( typeof value === "number" ) {
+    return `<span class="json-number">${String( value )}</span>`;
+  }
+
+  if ( typeof value === "boolean" ) {
+    return `<span class="json-boolean">${String( value )}</span>`;
+  }
+
+  return `<span class="json-collapsed">${escapeHtml( String( value ) )}</span>`;
 }
 
 function escapeHtml( str: string ): string {

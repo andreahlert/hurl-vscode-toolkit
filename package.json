@@ -88,6 +88,22 @@
       {
         "command": "hurl-toolkit.clearEnvironment",
         "title": "Hurl: Clear Environment"
+      },
+      {
+        "command": "hurl-toolkit.fetchGraphQLSchema",
+        "title": "Hurl: Fetch GraphQL Schema"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "hurl-toolkit.runEntryFocused",
+        "key": "ctrl+enter",
+        "when": "editorTextFocus && editorLangId == hurl"
+      },
+      {
+        "command": "hurl-toolkit.runFileFocused",
+        "key": "ctrl+shift+enter",
+        "when": "editorTextFocus && editorLangId == hurl"
       }
     ],
     "configuration": {

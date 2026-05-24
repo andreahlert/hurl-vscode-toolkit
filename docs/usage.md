@@ -25,9 +25,14 @@ The extension adds CodeLens actions above request blocks:
 - `Run Request` executes the request under the cursor
 - `Run All` executes every request in the file
 
+You can also use keyboard shortcuts inside `.hurl` files:
+
+- `Ctrl+Enter` runs the current request under the cursor
+- `Ctrl+Shift+Enter` runs the entire file
+
 You can also use the command palette and run the extension commands directly:
 
-- `Hurl: Run Current Request`
+- `Hurl: Run Request Entry`
 - `Hurl: Run Entire File`
 
 Results appear in the extension output channel. If webview previews are enabled, the response panel is reused between runs.

@@ -40,22 +40,35 @@ export function parseHurlEntries( document: vscode.TextDocument ): HurlEntry[] {
   const entries: HurlEntry[] = [];
   const lineCount = document.lineCount;
   let entryIndex = 0;
+  let currentEntry: HurlEntry | undefined;
 
   for ( let i = 0; i < lineCount; i++ ) {
     const lineText = document.lineAt( i ).text.trimStart();
+    if ( /^HTTP\b/.test( lineText ) ) {
+      if ( currentEntry ) {
+        currentEntry.endLine = i;
+      }
+      continue;
+    }
+
     const match = lineText.match( /^([A-Z]{2,20})\s+(.+)$/ );
     if ( match ) {
       // Close the previous entry
-      if ( entries.length > 0 ) {
-        entries[ entries.length - 1 ].endLine = i - 1;
+      if ( currentEntry ) {
+        currentEntry.endLine = i - 1;
       }
-      entries.push( {
+
+      currentEntry = {
         method: match[ 1 ],
         url: match[ 2 ].trim(),
         startLine: i,
         endLine: lineCount - 1,
         entryIndex: entryIndex++,
-      } );
+      };
+      entries.push( currentEntry );
+    }
+    else if ( currentEntry ) {
+      currentEntry.endLine = i;
     }
   }
 

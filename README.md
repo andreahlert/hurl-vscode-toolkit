@@ -28,6 +28,11 @@ Full TextMate grammar for `.hurl` files with support for HTTP methods, URLs, hea
 
 Click **Run Request** above any HTTP method to execute it with `hurl`. Click **Run All** to execute every request in the file. Output is displayed in a dedicated output channel, and the optional webview panel is reused on each run instead of opening a new tab.
 
+Keyboard shortcuts are also available in `.hurl` files:
+
+- `Ctrl+Enter` runs the current request under the cursor
+- `Ctrl+Shift+Enter` runs the entire file
+
 ### IntelliSense
 
 Context-aware completions for:

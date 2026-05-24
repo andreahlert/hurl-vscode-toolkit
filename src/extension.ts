@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { HurlCompletionProvider } from "./providers/completionProvider";
+import { GraphQLCompletionProvider } from "./providers/graphql.completion";
 import { HurlHoverProvider } from "./providers/hoverProvider";
 import { HurlDiagnosticProvider } from "./providers/diagnosticProvider";
 import {
@@ -18,6 +19,7 @@ export function activate( context: vscode.ExtensionContext ): void {
   const outputChannel = vscode.window.createOutputChannel( "Hurl Toolkit" );
   const environmentManager = new HurlEnvironmentManager( context );
   const environmentStatusBarItem = vscode.window.createStatusBarItem( vscode.StatusBarAlignment.Left, 100 );
+  const graphqlProvider = new GraphQLCompletionProvider();
 
   const updateEnvironmentStatusBar = () => {
     environmentStatusBarItem.text = `Hurl: ${environmentManager.getActiveEnvironmentLabel()}`;
@@ -37,11 +39,11 @@ export function activate( context: vscode.ExtensionContext ): void {
     ,
     vscode.languages.registerCompletionItemProvider(
       HURL_SELECTOR,
-      new HurlCompletionProvider(),
+      new HurlCompletionProvider( graphqlProvider ),
       "[", // trigger for sections
       "{", // trigger for variables
       ":", // trigger for header values
-      " "  // trigger after method, etc.
+      "("  // trigger for GraphQL argument completions
     )
     ,
     vscode.languages.registerHoverProvider( HURL_SELECTOR, new HurlHoverProvider() )
@@ -82,8 +84,18 @@ export function activate( context: vscode.ExtensionContext ): void {
     )
     ,
     vscode.commands.registerCommand(
+      "hurl-toolkit.runEntryFocused",
+      createRunEntryCommand( outputChannel, environmentManager, true )
+    )
+    ,
+    vscode.commands.registerCommand(
       "hurl-toolkit.runFile",
       createRunFileCommand( outputChannel, environmentManager )
+    )
+    ,
+    vscode.commands.registerCommand(
+      "hurl-toolkit.runFileFocused",
+      createRunFileCommand( outputChannel, environmentManager, true )
     )
     ,
     vscode.commands.registerCommand(
@@ -99,6 +111,18 @@ export function activate( context: vscode.ExtensionContext ): void {
       async () => {
         await environmentManager.clearEnvironment();
         updateEnvironmentStatusBar();
+      }
+    )
+    ,
+    vscode.commands.registerCommand(
+      "hurl-toolkit.fetchGraphQLSchema",
+      async () => {
+        const editor = vscode.window.activeTextEditor;
+        if ( !editor || editor.document.languageId !== "hurl" ) {
+          vscode.window.showErrorMessage( "Hurl Toolkit: Open a .hurl file and place the cursor inside a ```graphql block." );
+          return;
+        }
+        await graphqlProvider.fetchAndCacheSchemaForDocument( editor.document, editor.selection.active );
       }
     )
     , outputChannel, environmentStatusBarItem );
